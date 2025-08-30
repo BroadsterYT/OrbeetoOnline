@@ -15,7 +15,6 @@ import screen
 import calc
 import classbases as cb
 import constants as cst
-import enemies
 import groups
 import players
 import roomcontainers
@@ -759,42 +758,6 @@ class Room(cb.AbstractBase):
             width = self.player1.hitbox.width // 2
             height = self.player1.hitbox.height // 2
 
-            if self.player1.pos.y >= self.border_south.pos.y - height:
-                self.can_update = False
-                self.player1.can_update = False
-                self.room.y -= 1
-                self.last_dir_entered = cst.SOUTH
-                self.trans_screen.active = True
-                self.trans_screen.last_trans = time.time()
-                calc.kill_groups(groups.all_projs)
-
-            elif self.player1.pos.x >= self.border_east.pos.x - width:
-                self.can_update = False
-                self.player1.can_update = False
-                self.room.x += 1
-                self.last_dir_entered = cst.EAST
-                self.trans_screen.active = True
-                self.trans_screen.last_trans = time.time()
-                calc.kill_groups(groups.all_projs)
-
-            elif self.player1.pos.y <= self.border_north.pos.y + height:
-                self.can_update = False
-                self.player1.can_update = False
-                self.room.y += 1
-                self.last_dir_entered = cst.NORTH
-                self.trans_screen.active = True
-                self.trans_screen.last_trans = time.time()
-                calc.kill_groups(groups.all_projs)
-
-            elif self.player1.pos.x <= self.border_west.pos.x + width:
-                self.can_update = False
-                self.player1.can_update = False
-                self.room.x -= 1
-                self.last_dir_entered = cst.WEST
-                self.trans_screen.active = True
-                self.trans_screen.last_trans = time.time()
-                calc.kill_groups(groups.all_projs)
-
     def _init_room(self, room_size_x: int, room_size_y: int, can_scroll_x: bool, can_scroll_y: bool) -> None:
         """Initializes a room's properties. This function must be called once for every room iteration.
 
@@ -927,7 +890,6 @@ class Room(cb.AbstractBase):
         if self.room == vec(0, 0):
             return [
                 tiles.Wall(0, 0, 4, 41),
-                enemies.Turret(300, 300),
                 # tiles.CustomWall(cst.WINWIDTH // 2, cst.WINHEIGHT // 2,
                 #                  'xx\nxo', 64)
                 trinkets.Box(300, 300)
