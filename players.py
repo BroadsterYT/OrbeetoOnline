@@ -26,7 +26,6 @@ from netclient import NetClient
 
 net = NetClient("localhost", 12345)
 
-
 class PlayerGun(cb.ActorBase):
     def __init__(self, owner, weapon: str):
         """A gun object that allows the player to shoot
@@ -103,6 +102,8 @@ class Player(cb.ActorBase):
 
         self.pos = vec((cst.WINWIDTH // 2, cst.WINHEIGHT // 2))
         self.accel_const = 0.58
+
+        self.local_bullets = {}
 
         # -------------------------------- Game Stats -------------------------------- #
         self._xp = 0
@@ -343,11 +344,8 @@ class Player(cb.ActorBase):
             l_vel_y = self.gun_l.bullet_vel * -math.cos(angle)
 
             if self.gun_l.weapon == items.WEAPONS[0]:
-                groups.all_projs.add(
-                    # proj.PlayerChakram(self.pos.x + l_x_off, self.pos.y + l_y_off, l_vel_x, l_vel_y)
-                    proj.PlayerStdBullet(self.pos.x + l_x_off, self.pos.y + l_y_off, l_vel_x, l_vel_y)
-                    # proj.PlayerHomingBullet(self.pos.x + l_x_off, self.pos.y + l_y_off, l_vel_x, l_vel_y)
-                )
+                net.send_fire(self.pos.x + l_x_off - self.room.pos.x, self.pos.y + l_y_off - self.room.pos.y, l_vel_x, l_vel_y)
+
             elif self.gun_l.weapon == items.WEAPONS[2]:
                 groups.all_projs.add(
                     proj.PlayerChakram(self.pos.x + l_x_off, self.pos.y + l_y_off, l_vel_x, l_vel_y)
@@ -362,9 +360,7 @@ class Player(cb.ActorBase):
             r_vel_y = self.gun_r.bullet_vel * -math.cos(angle)
 
             if self.gun_r.weapon == items.WEAPONS[1]:
-                groups.all_projs.add(
-                    proj.PlayerStdBullet(self.pos.x + r_x_off, self.pos.y + r_y_off, r_vel_x, r_vel_y)
-                )
+                net.send_fire(self.pos.x + r_x_off - self.room.pos.x, self.pos.y + r_y_off - self.room.pos.y, r_vel_x, r_vel_y)
             else:
                 raise RuntimeError(f'{self.gun_r.weapon} is not a valid weapon for gun_r')
 
@@ -449,6 +445,19 @@ class Player(cb.ActorBase):
 
         net.send_move(self.pos.x - self.room.pos.x, self.pos.y - self.room.pos.y)
         net.pump()
+
+        # DEVTOOLS
+        for bid, bullet in net.bullets.items():
+            if bid not in self.local_bullets:
+                self.local_bullets[bid] = cb.ActorBase()
+                self.local_bullets[bid].add_to_gamestate()
+                self.local_bullets[bid].set_images(os.path.join(os.getcwd(), 'sprites/bullets/bullets.png'), 32, 32, 8, 1)
+                self.local_bullets[bid].set_rects(0, 0, 8, 8, 8, 8)
+                self.local_bullets[bid].pos = vec(bullet["x"] + self.room.pos.x, bullet["y"] + self.room.pos.y)
+            else:
+                self.local_bullets[bid].pos = vec(bullet["x"] + self.room.pos.x, bullet["y"] + self.room.pos.y)
+                self.local_bullets[bid].render_images()
+                self.local_bullets[bid].center_rects()
 
     def _animate(self):
         pass
