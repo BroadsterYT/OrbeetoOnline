@@ -11,7 +11,6 @@ from pygame.math import Vector2 as vec
 
 import controls as ctrl
 import items
-import menus
 import projectiles as proj
 
 import calc
@@ -21,6 +20,11 @@ import groups
 import statbars
 import text
 import timer
+
+from netclient import NetClient
+
+
+net = NetClient("localhost", 12345)
 
 
 class PlayerGun(cb.ActorBase):
@@ -442,6 +446,9 @@ class Player(cb.ActorBase):
 
         if self.hp <= 0:
             self.kill()
+
+        net.send_move(self.pos.x - self.room.pos.x, self.pos.y - self.room.pos.y)
+        net.pump()
 
     def _animate(self):
         pass
