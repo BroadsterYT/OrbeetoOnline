@@ -26,6 +26,7 @@ from netclient import NetClient
 
 net = NetClient("localhost", 12345)
 
+
 class PlayerGun(cb.ActorBase):
     def __init__(self, owner, weapon: str):
         """A gun object that allows the player to shoot
@@ -103,7 +104,8 @@ class Player(cb.ActorBase):
         self.pos = vec((cst.WINWIDTH // 2, cst.WINHEIGHT // 2))
         self.accel_const = 0.58
 
-        self.local_bullets = {}
+        self.local_players = {}
+        self.realizer = ServerRealizer()
 
         # -------------------------------- Game Stats -------------------------------- #
         self._xp = 0
@@ -446,7 +448,36 @@ class Player(cb.ActorBase):
         net.send_move(self.pos.x - self.room.pos.x, self.pos.y - self.room.pos.y)
         net.pump()
 
-        # DEVTOOLS
+        # NOT OFFICIAL
+        for pid, state in net.players.items():
+            if pid not in self.local_players:
+                if pid != net.my_id:
+                    self.local_players[pid] = cb.ActorBase()
+                    self.local_players[pid].add_to_gamestate()
+                    self.local_players[pid].set_images(os.path.join(os.getcwd(), 'sprites/orbeeto/orbeeto.png'), 64, 64, 5, 5)
+                    self.local_players[pid].set_rects(0, 0, 64, 64, 32, 32)
+                    self.local_players[pid].pos = vec(state["x"] + self.room.pos.x, state["y"] + self.room.pos.y)
+            else:
+                self.local_players[pid].pos = vec(state["x"] + self.room.pos.x, state["y"] + self.room.pos.y)
+                self.local_players[pid].render_images()
+                self.local_players[pid].center_rects()
+
+        self.realizer.realize_bullets()
+
+    def _animate(self):
+        pass
+
+    def __repr__(self):
+        return f'Player({self.pos}, {self.vel}, {self.accel})'
+
+
+class ServerRealizer:
+    def __init__(self):
+        self.room = cb.get_room()
+        self.local_players = {}
+        self.local_bullets = {}
+
+    def realize_bullets(self):
         for bid, bullet in net.bullets.items():
             if bid not in self.local_bullets:
                 self.local_bullets[bid] = cb.ActorBase()
@@ -454,16 +485,14 @@ class Player(cb.ActorBase):
                 self.local_bullets[bid].set_images(os.path.join(os.getcwd(), 'sprites/bullets/bullets.png'), 32, 32, 8, 1)
                 self.local_bullets[bid].set_rects(0, 0, 8, 8, 8, 8)
                 self.local_bullets[bid].pos = vec(bullet["x"] + self.room.pos.x, bullet["y"] + self.room.pos.y)
+                self.local_bullets[bid].rotate_image(calc.get_vec_angle(bullet["vel_x"], bullet["y"]))
             else:
                 self.local_bullets[bid].pos = vec(bullet["x"] + self.room.pos.x, bullet["y"] + self.room.pos.y)
                 self.local_bullets[bid].render_images()
                 self.local_bullets[bid].center_rects()
 
-    def _animate(self):
-        pass
-
-    def __repr__(self):
-        return f'Player({self.pos}, {self.vel}, {self.accel})'
+        for b_tup in [tup for tup in self.local_bullets.items() if tup[0] not in net.bullets.keys()]:
+            b_tup[1].in_gamestate = False
 
 
 if __name__ == '__main__':

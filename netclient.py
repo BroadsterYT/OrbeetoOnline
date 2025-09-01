@@ -15,14 +15,20 @@ class NetClient(ConnectionListener):
 
     def Network_update_state(self, data):
         self.players = data["players"]
-        print("Players updated")
+        # print("Players updated")
 
     def Network_update_bullets(self, data):
         self.bullets = data["bullets"]
-        print("Bullets updated")
+        # print("Bullets updated")
+
+    def Network_destroy_bullet(self, data):
+        bullet_id = data["id"]
+        if bullet_id in self.bullets:
+            del self.bullets[bullet_id]
+            print(f"Bullet {bullet_id} destroyed on client")
 
     def Network(self, data):
-        #print("Unhandled message: ", data)
+        # print("Unhandled message: ", data)
         pass
 
     # ----- Orbeeto Hooks ----- #
