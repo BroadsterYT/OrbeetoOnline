@@ -346,7 +346,15 @@ class Player(cb.ActorBase):
             l_vel_y = self.gun_l.bullet_vel * -math.cos(angle)
 
             if self.gun_l.weapon == items.WEAPONS[0]:
-                net.send_fire(self.pos.x + l_x_off - self.room.pos.x, self.pos.y + l_y_off - self.room.pos.y, l_vel_x, l_vel_y)
+                net.send_fire(
+                    "standard",
+                    self.pos.x + l_x_off - self.room.pos.x,
+                    self.pos.y + l_y_off - self.room.pos.y,
+                    l_vel_x,
+                    l_vel_y,
+                    6,
+                    6,
+                )
 
             elif self.gun_l.weapon == items.WEAPONS[2]:
                 groups.all_projs.add(
@@ -362,7 +370,15 @@ class Player(cb.ActorBase):
             r_vel_y = self.gun_r.bullet_vel * -math.cos(angle)
 
             if self.gun_r.weapon == items.WEAPONS[1]:
-                net.send_fire(self.pos.x + r_x_off - self.room.pos.x, self.pos.y + r_y_off - self.room.pos.y, r_vel_x, r_vel_y)
+                net.send_fire(
+                    "standard",
+                    self.pos.x + r_x_off - self.room.pos.x,
+                    self.pos.y + r_y_off - self.room.pos.y,
+                    r_vel_x,
+                    r_vel_y,
+                    6,
+                    6
+                )
             else:
                 raise RuntimeError(f'{self.gun_r.weapon} is not a valid weapon for gun_r')
 

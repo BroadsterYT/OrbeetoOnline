@@ -12,7 +12,6 @@ import controls as ctrl
 
 import constants as cst
 import groups
-import rooms
 import timer
 
 
@@ -195,6 +194,10 @@ def triangle_collide(instig, sprite) -> str:
                 +------------+
                     Side A
     """
+    inst = instig
+    if type(instig) is not vec:
+        inst = inst.pos
+
     # Bottom right corner
     point_a = vec(sprite.pos.x + sprite.hitbox.width // 2,
                   sprite.pos.y + sprite.hitbox.height // 2)
@@ -211,15 +214,15 @@ def triangle_collide(instig, sprite) -> str:
     point_d = vec(sprite.pos.x - sprite.hitbox.width // 2,
                   sprite.pos.y + sprite.hitbox.height // 2)
 
-    len_point_a = get_dist(instig.pos, point_a)
-    len_point_b = get_dist(instig.pos, point_b)
-    len_point_c = get_dist(instig.pos, point_c)
-    len_point_d = get_dist(instig.pos, point_d)
+    len_point_a = get_dist(inst, point_a)
+    len_point_b = get_dist(inst, point_b)
+    len_point_c = get_dist(inst, point_c)
+    len_point_d = get_dist(inst, point_d)
 
-    angle_a = math.radians(get_angle(instig.pos, point_a) + 90)
-    angle_b = math.radians(get_angle(instig.pos, point_b) + 90)
-    angle_c = math.radians(get_angle(instig.pos, point_c) + 90)
-    angle_d = math.radians(get_angle(instig.pos, point_d) + 90)
+    angle_a = math.radians(get_angle(inst, point_a) + 90)
+    angle_b = math.radians(get_angle(inst, point_b) + 90)
+    angle_c = math.radians(get_angle(inst, point_c) + 90)
+    angle_d = math.radians(get_angle(inst, point_d) + 90)
 
     height_ap = abs(len_point_a * math.sin(angle_a))
     height_bp = abs(len_point_b * math.cos(angle_b))

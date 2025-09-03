@@ -1,7 +1,8 @@
 from PodSixNet.Server import Server
 from PodSixNet.Channel import Channel
 
-import time
+import groups
+import calc
 
 
 class PlayerChannel(Channel):
@@ -18,10 +19,13 @@ class PlayerChannel(Channel):
     def Network_fire(self, data):
         bullet_id = self._server.spawn_bullet(
             owner=self.id,
+            bullet_type=data["bullet_type"],
             x=data["x"],
             y=data["y"],
             vel_x=data["vel_x"],
             vel_y=data["vel_y"],
+            hit_w=data["hit_w"],
+            hit_h=data["hit_h"],
         )
         return bullet_id
 
@@ -52,16 +56,19 @@ class OrbeetoServer(Server):
         if channel.id in self.players:
             del self.players[channel.id]
 
-    def spawn_bullet(self, owner, x, y, vel_x, vel_y):
+    def spawn_bullet(self, owner, bullet_type: str, x, y, vel_x, vel_y, hit_w: int, hit_h: int):
         bullet_id = self.next_bullet_id
         self.next_bullet_id += 1
 
         self.bullets[bullet_id] = {
             "owner": owner,
+            "bullet_type": bullet_type,
             "x": x,
             "y": y,
             "vel_x": vel_x,
             "vel_y": vel_y,
+            "hit_w": hit_w,
+            "hit_h": hit_h,
             "alive": True,
         }
 
@@ -109,8 +116,22 @@ class OrbeetoServer(Server):
             b["x"] += b["vel_x"] * 0.75
             b["y"] += b["vel_y"] * 0.75
 
-        # TODO: Find way to reference room
-        # Destroy bullets OOB
+            # Bullet Wall Collisions
+            for wall in groups.all_walls:
+                b_half_w = b["hit_w"] // 2
+                b_half_h = b["hit_h"] // 2
+                wall_half_w = wall.hitbox.width // 2
+                wall_half_h = wall.hitbox.height // 2
+                if (
+                    b["x"] + b_half_w >= wall.pos.x - wall_half_w
+                    or b["x"] - b_half_w <= wall.pos.x + wall_half_w
+                    or b["y"] + b_half_h >= wall.pos.y - wall_half_h
+                    or b["y"] - b_half_h <= wall.pos.y + wall_half_h
+                ):
+                    pass
+
+            # TODO: Find way to reference room
+            # Destroy bullets OOB
             if b["x"] >= 1280 or b["x"] <= 0 or b["y"] >= 720 or b["y"] <= 0:
                 to_destroy.append(bid)
 
@@ -124,6 +145,8 @@ class OrbeetoServer(Server):
 
 
 if __name__ == "__main__":
+    import time
+
     server = OrbeetoServer()
     print(f"Server running on {server.socket.getsockname()}")
     while True:
