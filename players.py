@@ -485,10 +485,11 @@ class ServerRealizer:
                 self.local_bullets[bid].set_images(os.path.join(os.getcwd(), 'sprites/bullets/bullets.png'), 32, 32, 8, 1)
                 self.local_bullets[bid].set_rects(0, 0, 8, 8, 8, 8)
                 self.local_bullets[bid].pos = vec(bullet["x"] + self.room.pos.x, bullet["y"] + self.room.pos.y)
-                self.local_bullets[bid].rotate_image(calc.get_vec_angle(bullet["vel_x"], bullet["y"]))
+                self.local_bullets[bid].rotate_image(calc.get_vec_angle(bullet["vel_x"], bullet["vel_y"]))
             else:
                 self.local_bullets[bid].pos = vec(bullet["x"] + self.room.pos.x, bullet["y"] + self.room.pos.y)
-                self.local_bullets[bid].render_images()
+                # self.local_bullets[bid].render_images()
+                print(f"VelX: {bullet['vel_x']} | VelY: {bullet['vel_y']}")
                 self.local_bullets[bid].center_rects()
 
         for b_tup in [tup for tup in self.local_bullets.items() if tup[0] not in net.bullets.keys()]:

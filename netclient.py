@@ -25,7 +25,6 @@ class NetClient(ConnectionListener):
         bullet_id = data["id"]
         if bullet_id in self.bullets:
             del self.bullets[bullet_id]
-            print(f"Bullet {bullet_id} destroyed on client")
 
     def Network(self, data):
         # print("Unhandled message: ", data)
