@@ -6,6 +6,7 @@ from server_rooms import ServerRoom
 import calc
 import constants as cst
 
+import pygame
 from pygame.math import Vector2 as vec
 
 
@@ -122,36 +123,42 @@ class OrbeetoServer(Server):
             client.Send(bullets_state)
 
     def tick(self):
-        for pid, ch in self.players.items():
-            state = ch.state
-            # print(f"Player={pid} | x={state['x']} | y={state['y']}")
-
         to_destroy = []  # Bullets to destroy after iteration
         for bid, b in self.bullets.items():
             b["x"] += b["vel_x"] * 0.75
             b["y"] += b["vel_y"] * 0.75
 
             # Bullet Wall Collisions
-            print(f"Walls: {len(self.walls)}")
             for wall_id, wall in self.walls.items():
-                b_half_w = b["hit_w"] // 2
-                b_half_h = b["hit_h"] // 2
-                wall_half_w = wall["width"] // 2
-                wall_half_h = wall["height"] // 2
+                bullet_hitbox = pygame.Rect(
+                    b["x"] - b["hit_w"] // 2,
+                    b["y"] - b["hit_h"] // 2,
+                    b["hit_w"],
+                    b["hit_h"]
+                )
 
-                instig_vec = vec(b["x"], b["y"])
-                wall_vec = vec(wall["x"], wall["y"])
-                wall_hit = vec(wall["width"], wall["height"])
-                side = calc.triangle_collide(instig_vec, wall_vec, wall_hit)
-                print(f"Side closest: {side}")
+                wall_width = wall["width"] * wall["block_width"]
+                wall_height = wall["height"] * wall["block_height"]
+                wall_hitbox = pygame.Rect(
+                    wall["x"] - wall_width // 2,
+                    wall["y"] - wall_height // 2,
+                    wall_width,
+                    wall_height
+                )
 
-                if (
-                    (b["x"] + b_half_w >= wall["x"] - wall_half_w and b["x"] - b_half_w < wall["x"] + wall_half_w)
-                    or (b["x"] - b_half_w <= wall["x"] + wall_half_w and b["x"] + b_half_w > wall["x"] - wall_half_w)
-                    or (b["y"] + b_half_h >= wall["y"] - wall_half_h and b["y"] - b_half_h < wall["y"] + wall_half_h)
-                    or (b["y"] - b_half_h <= wall["y"] + wall_half_h and b["y"] + b_half_h > wall["y"] - wall_half_h)
-                ):
-                    to_destroy.append(bid)
+                if not bullet_hitbox.colliderect(wall_hitbox):
+                    continue
+
+                to_destroy.append(bid)
+
+                # side = calc.triangle_collide(instig_vec, wall_vec, wall_hit)
+                # print(f"hit {side}")
+                # if (
+                #     side == cst.SOUTH
+                #     # and b["vel.y"] < 0
+                #     # and b["y"] <= wall["y"] + height
+                # ):
+                # to_destroy.append(bid)
 
             # TODO: Find way to reference room
             # Destroy bullets OOB
@@ -160,9 +167,6 @@ class OrbeetoServer(Server):
 
         for bullet in to_destroy:
             self.destroy_bullet(bullet)
-
-        # for bid, bullet in self.bullets.items():
-        #     print(f"Bullet={bid} | x={bullet['x']} | y={bullet['y']} | vel_x={bullet['vel_x']} | vel_y={bullet['vel_y']}")
 
         self.broadcast()
 
