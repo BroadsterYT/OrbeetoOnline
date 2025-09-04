@@ -179,11 +179,12 @@ def get_opposite(value):
         return ctrl.K_MOVE_RIGHT
 
 
-def triangle_collide(instig, sprite) -> str:
+def triangle_collide(instig, sprite, spr_hit: vec = vec(0, 0)) -> str:
     """Determines where two sprites collide using a triangulation approach
 
     :param instig: The instigator of the collision
     :param sprite: The sprite being collided into
+    :param spr_hit: Sprite hitbox dimensions. Can leave blank if passing ActorBase into sprite
     :return: The side the instigator struck upon the other sprite
 
                     Side C
@@ -198,21 +199,26 @@ def triangle_collide(instig, sprite) -> str:
     if type(instig) is not vec:
         inst = inst.pos
 
+    spr = sprite
+    if type(sprite) is not vec:
+        spr = sprite.pos
+        spr_hit = vec(sprite.hitbox.width, sprite.hitbox.height)
+
     # Bottom right corner
-    point_a = vec(sprite.pos.x + sprite.hitbox.width // 2,
-                  sprite.pos.y + sprite.hitbox.height // 2)
+    point_a = vec(spr.x + spr_hit.x // 2,
+                  spr.y + spr_hit.y // 2)
 
     # Top right corner
-    point_b = vec(sprite.pos.x + sprite.hitbox.width // 2,
-                  sprite.pos.y - sprite.hitbox.height // 2)
+    point_b = vec(spr.x + spr_hit.x // 2,
+                  spr.y - spr_hit.y // 2)
 
     # Top left corner
-    point_c = vec(sprite.pos.x - sprite.hitbox.width // 2,
-                  sprite.pos.y - sprite.hitbox.height // 2)
+    point_c = vec(spr.x - spr_hit.x // 2,
+                  spr.y - spr_hit.y // 2)
 
     # Bottom left corner
-    point_d = vec(sprite.pos.x - sprite.hitbox.width // 2,
-                  sprite.pos.y + sprite.hitbox.height // 2)
+    point_d = vec(spr.x - spr_hit.x // 2,
+                  spr.y + spr_hit.y // 2)
 
     len_point_a = get_dist(inst, point_a)
     len_point_b = get_dist(inst, point_b)
@@ -228,11 +234,6 @@ def triangle_collide(instig, sprite) -> str:
     height_bp = abs(len_point_b * math.cos(angle_b))
     height_cp = abs(len_point_c * math.sin(angle_c))
     height_dp = abs(len_point_d * math.cos(angle_d))
-
-    # height_ap = abs(get_dist(instig.pos, point_a) * math.sin(angle_a))
-    # height_bp = abs(get_dist(instig.pos, point_b) * math.cos(angle_b))
-    # height_cp = abs(get_dist(instig.pos, point_c) * math.sin(angle_c))
-    # height_dp = abs(get_dist(instig.pos, point_d) * math.cos(angle_d))
 
     def is_closest_side(height: float) -> bool:
         """Determines if the given distance is the one closest to the instigator (the shortest)
@@ -250,45 +251,32 @@ def triangle_collide(instig, sprite) -> str:
         return output
 
     if is_closest_side(height_ap):
-        if instig.pos.x >= point_b.x:
+        if inst.x >= point_b.x:
             return cst.EAST
-        if instig.pos.x <= point_d.x:
+        if inst.x <= point_d.x:
             return cst.WEST
         return cst.SOUTH
 
     elif is_closest_side(height_bp):
-        if instig.pos.y >= point_a.y:
+        if inst.y >= point_a.y:
             return cst.SOUTH
-        if instig.pos.y <= point_c.y:
+        if inst.y <= point_c.y:
             return cst.NORTH
         return cst.EAST
 
     elif is_closest_side(height_cp):
-        if instig.pos.x >= point_b.x:
+        if inst.x >= point_b.x:
             return cst.EAST
-        if instig.pos.x <= point_d.x:
+        if inst.x <= point_d.x:
             return cst.WEST
         return cst.NORTH
 
     elif is_closest_side(height_dp):
-        if instig.pos.y >= point_a.y:
+        if inst.y >= point_a.y:
             return cst.SOUTH
-        if instig.pos.y <= point_c.y:
+        if inst.y <= point_c.y:
             return cst.NORTH
         return cst.WEST
-
-
-# def is_closest_side(height_a: float, height_b: float, height_c: float, height_d: float, height_comp: float) -> bool:
-#     height_list = np.array([height_a, height_b, height_c, height_d], dtype=float)
-#
-#     output = True
-#     for dist in height_list:
-#         if height_comp < dist:
-#             output = True
-#         else:
-#             output = False
-#             break
-#     return output
 
 
 # ============================================================================ #

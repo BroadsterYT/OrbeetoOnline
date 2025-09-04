@@ -2,7 +2,11 @@ from PodSixNet.Server import Server
 from PodSixNet.Channel import Channel
 
 import groups
+from server_rooms import ServerRoom
 import calc
+import constants as cst
+
+from pygame.math import Vector2 as vec
 
 
 class PlayerChannel(Channel):
@@ -41,8 +45,12 @@ class OrbeetoServer(Server):
         Server.__init__(self, localaddr=(host, port))
         self.players = {}
         self.bullets = {}
+        self.walls = {}
         self.next_player_id = 0
         self.next_bullet_id = 0
+
+        self.current_room = vec(0, 0)
+        self._build_room(0, 0)
 
     def Connected(self, channel, addr):
         # TODO: Allow player ID's to be remembered and removed
@@ -51,6 +59,13 @@ class OrbeetoServer(Server):
         self.next_player_id += 1
         channel.Send({"action": "init", "id": channel.id})
         print(f"Player {channel.id} connected.")
+
+    def _build_room(self, room_x, room_y):
+        self.walls.clear()
+
+        self.walls = {
+            ServerRoom.get_next_wall_id(): ServerRoom.new_wall(0, 0, 16, 16, 4, 41)
+        }
 
     def remove_player(self, channel):
         if channel.id in self.players:
@@ -109,7 +124,7 @@ class OrbeetoServer(Server):
     def tick(self):
         for pid, ch in self.players.items():
             state = ch.state
-            print(f"Player={pid} | x={state['x']} | y={state['y']}")
+            # print(f"Player={pid} | x={state['x']} | y={state['y']}")
 
         to_destroy = []  # Bullets to destroy after iteration
         for bid, b in self.bullets.items():
@@ -117,18 +132,26 @@ class OrbeetoServer(Server):
             b["y"] += b["vel_y"] * 0.75
 
             # Bullet Wall Collisions
-            for wall in groups.all_walls:
+            print(f"Walls: {len(self.walls)}")
+            for wall_id, wall in self.walls.items():
                 b_half_w = b["hit_w"] // 2
                 b_half_h = b["hit_h"] // 2
-                wall_half_w = wall.hitbox.width // 2
-                wall_half_h = wall.hitbox.height // 2
+                wall_half_w = wall["width"] // 2
+                wall_half_h = wall["height"] // 2
+
+                instig_vec = vec(b["x"], b["y"])
+                wall_vec = vec(wall["x"], wall["y"])
+                wall_hit = vec(wall["width"], wall["height"])
+                side = calc.triangle_collide(instig_vec, wall_vec, wall_hit)
+                print(f"Side closest: {side}")
+
                 if (
-                    b["x"] + b_half_w >= wall.pos.x - wall_half_w
-                    or b["x"] - b_half_w <= wall.pos.x + wall_half_w
-                    or b["y"] + b_half_h >= wall.pos.y - wall_half_h
-                    or b["y"] - b_half_h <= wall.pos.y + wall_half_h
+                    (b["x"] + b_half_w >= wall["x"] - wall_half_w and b["x"] - b_half_w < wall["x"] + wall_half_w)
+                    or (b["x"] - b_half_w <= wall["x"] + wall_half_w and b["x"] + b_half_w > wall["x"] - wall_half_w)
+                    or (b["y"] + b_half_h >= wall["y"] - wall_half_h and b["y"] - b_half_h < wall["y"] + wall_half_h)
+                    or (b["y"] - b_half_h <= wall["y"] + wall_half_h and b["y"] + b_half_h > wall["y"] - wall_half_h)
                 ):
-                    pass
+                    to_destroy.append(bid)
 
             # TODO: Find way to reference room
             # Destroy bullets OOB
@@ -138,8 +161,8 @@ class OrbeetoServer(Server):
         for bullet in to_destroy:
             self.destroy_bullet(bullet)
 
-        for bid, bullet in self.bullets.items():
-            print(f"Bullet={bid} | x={bullet['x']} | y={bullet['y']} | vel_x={bullet['vel_x']} | vel_y={bullet['vel_y']}")
+        # for bid, bullet in self.bullets.items():
+        #     print(f"Bullet={bid} | x={bullet['x']} | y={bullet['y']} | vel_x={bullet['vel_x']} | vel_y={bullet['vel_y']}")
 
         self.broadcast()
 

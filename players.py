@@ -23,7 +23,6 @@ import timer
 
 from netclient import NetClient
 
-
 net = NetClient("localhost", 12345)
 
 
@@ -90,6 +89,7 @@ class PlayerGun(cb.ActorBase):
 
 class Player(cb.ActorBase):
     """A player sprite that can move and shoot."""
+
     def __init__(self):
         super().__init__(cst.LAYER['player'])
         self.add_to_gamestate()
@@ -464,20 +464,7 @@ class Player(cb.ActorBase):
         net.send_move(self.pos.x - self.room.pos.x, self.pos.y - self.room.pos.y)
         net.pump()
 
-        # NOT OFFICIAL
-        for pid, state in net.players.items():
-            if pid not in self.local_players:
-                if pid != net.my_id:
-                    self.local_players[pid] = cb.ActorBase()
-                    self.local_players[pid].add_to_gamestate()
-                    self.local_players[pid].set_images(os.path.join(os.getcwd(), 'sprites/orbeeto/orbeeto.png'), 64, 64, 5, 5)
-                    self.local_players[pid].set_rects(0, 0, 64, 64, 32, 32)
-                    self.local_players[pid].pos = vec(state["x"] + self.room.pos.x, state["y"] + self.room.pos.y)
-            else:
-                self.local_players[pid].pos = vec(state["x"] + self.room.pos.x, state["y"] + self.room.pos.y)
-                self.local_players[pid].render_images()
-                self.local_players[pid].center_rects()
-
+        self.realizer.realize_players()
         self.realizer.realize_bullets()
 
     def _animate(self):
@@ -493,21 +480,57 @@ class ServerRealizer:
         self.local_players = {}
         self.local_bullets = {}
 
+    @staticmethod
+    def _create_vessel(
+            sprite_path: str,
+            sprites_per_row: int,
+            num_sprites: int,
+            rect_width: int,
+            rect_height: int,
+            hit_width: int,
+            hit_height: int
+    ) -> cb.ActorBase:
+        """Creates an empty vessel to display on client-side
+
+        :param sprite_path:
+        :param sprites_per_row:
+        :param num_sprites:
+        :param rect_width:
+        :param rect_height:
+        :param hit_width:
+        :param hit_height:
+        :return: The created actor
+        """
+        vessel = cb.ActorBase()
+
+        vessel.add_to_gamestate()
+        vessel.set_images(os.path.join(os.getcwd(), sprite_path), rect_width, rect_height, sprites_per_row, num_sprites)
+        vessel.set_rects(0, 0, rect_width, rect_height, hit_width, hit_height)
+
+        return vessel
+
+    def realize_players(self):
+        for pid, state in net.players.items():
+            if pid not in self.local_players:
+                if pid != net.my_id:
+                    self.local_players[pid] = self._create_vessel("sprites/orbeeto/orbeeto.png", 5, 5, 64, 64, 32, 32)
+                    self.local_players[pid].pos = vec(state["x"] + self.room.pos.x, state["y"] + self.room.pos.y)
+            else:
+                self.local_players[pid].pos = vec(state["x"] + self.room.pos.x, state["y"] + self.room.pos.y)
+                self.local_players[pid].render_images()
+                self.local_players[pid].center_rects()
+
     def realize_bullets(self):
         for bid, bullet in net.bullets.items():
             if bid not in self.local_bullets:
-                self.local_bullets[bid] = cb.ActorBase()
-                self.local_bullets[bid].add_to_gamestate()
-                self.local_bullets[bid].set_images(os.path.join(os.getcwd(), 'sprites/bullets/bullets.png'), 32, 32, 8, 1)
-                self.local_bullets[bid].set_rects(0, 0, 8, 8, 8, 8)
+                self.local_bullets[bid] = self._create_vessel("sprites/bullets/bullets.png", 8, 1, 32, 32, 8, 8)
                 self.local_bullets[bid].pos = vec(bullet["x"] + self.room.pos.x, bullet["y"] + self.room.pos.y)
                 self.local_bullets[bid].rotate_image(calc.get_vec_angle(bullet["vel_x"], bullet["vel_y"]))
             else:
                 self.local_bullets[bid].pos = vec(bullet["x"] + self.room.pos.x, bullet["y"] + self.room.pos.y)
-                # self.local_bullets[bid].render_images()
-                print(f"VelX: {bullet['vel_x']} | VelY: {bullet['vel_y']}")
                 self.local_bullets[bid].center_rects()
 
+        # Destroy realization when server says bullet is dead
         for b_tup in [tup for tup in self.local_bullets.items() if tup[0] not in net.bullets.keys()]:
             b_tup[1].in_gamestate = False
 
