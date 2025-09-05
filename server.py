@@ -1,7 +1,6 @@
 from PodSixNet.Server import Server
 from PodSixNet.Channel import Channel
 
-import groups
 from server_rooms import ServerRoom
 import calc
 import constants as cst
@@ -94,7 +93,7 @@ class OrbeetoServer(Server):
 
             bullet_destroyed = {
                 "action": "destroy_bullet",
-                "id": bullet_id
+                "id": bullet_id,
             }
 
             for client in self.players.values():
@@ -128,37 +127,10 @@ class OrbeetoServer(Server):
             b["x"] += b["vel_x"] * 0.75
             b["y"] += b["vel_y"] * 0.75
 
-            # Bullet Wall Collisions
-            for wall_id, wall in self.walls.items():
-                bullet_hitbox = pygame.Rect(
-                    b["x"] - b["hit_w"] // 2,
-                    b["y"] - b["hit_h"] // 2,
-                    b["hit_w"],
-                    b["hit_h"]
-                )
-
-                wall_width = wall["width"] * wall["block_width"]
-                wall_height = wall["height"] * wall["block_height"]
-                wall_hitbox = pygame.Rect(
-                    wall["x"] - wall_width // 2,
-                    wall["y"] - wall_height // 2,
-                    wall_width,
-                    wall_height
-                )
-
-                if not bullet_hitbox.colliderect(wall_hitbox):
-                    continue
-
-                to_destroy.append(bid)
-
-                # side = calc.triangle_collide(instig_vec, wall_vec, wall_hit)
-                # print(f"hit {side}")
-                # if (
-                #     side == cst.SOUTH
-                #     # and b["vel.y"] < 0
-                #     # and b["y"] <= wall["y"] + height
-                # ):
-                # to_destroy.append(bid)
+            result = self._handle_bullet_wall_collision(bid, b, to_destroy)
+            if result is not None:
+                side_hit, data_hit = result
+                print(f"Side Hit: {side_hit} | Object Hit: {data_hit}")
 
             # TODO: Find way to reference room
             # Destroy bullets OOB
@@ -169,6 +141,46 @@ class OrbeetoServer(Server):
             self.destroy_bullet(bullet)
 
         self.broadcast()
+
+    def _handle_bullet_wall_collision(self, bid: int, b_data: dict[str, any], destroy_list: list[int]):
+        """
+
+        :param b_data: Bullet data being evaluated
+        :param destroy_list: A list containing all bullet IDs to be deleted after iterating all bullets
+        :return:
+        """
+        if b_data["bullet_type"] == "portal_bullet":
+            return
+
+        for wall_id, wall in self.walls.items():
+            bullet_hitbox = pygame.Rect(
+                b_data["x"] - b_data["hit_w"] // 2,
+                b_data["y"] - b_data["hit_h"] // 2,
+                b_data["hit_w"],
+                b_data["hit_h"]
+            )
+
+            wall_width = wall["width"] * wall["block_width"]
+            wall_height = wall["height"] * wall["block_height"]
+            wall_hitbox = pygame.Rect(
+                wall["x"] - wall_width // 2,
+                wall["y"] - wall_height // 2,
+                wall_width,
+                wall_height
+            )
+
+            if not bullet_hitbox.colliderect(wall_hitbox):
+                continue
+
+            instig_vec = vec(b_data["x"], b_data["y"])
+            wall_vec = vec(wall["x"], wall["y"])
+            wall_hit = vec(wall_width, wall_height)
+            side = calc.triangle_collide(instig_vec, wall_vec, wall_hit)
+
+            destroy_list.append(bid)
+            return side, wall
+
+
 
 
 if __name__ == "__main__":

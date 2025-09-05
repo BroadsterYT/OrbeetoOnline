@@ -25,6 +25,7 @@ class ServerRoom:
         true_y = pos_y + (height * block_height) // 2
 
         wall = {
+            "bullet_surface": "wall",
             "x": true_x,
             "y": true_y,
             "block_width": block_width,

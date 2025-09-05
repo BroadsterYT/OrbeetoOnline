@@ -392,11 +392,27 @@ class Player(cb.ActorBase):
         vel_y = self.bullet_vel * -math.cos(angle)
 
         if ctrl.key_released[3] % 2 == 0 and self.can_portal:
-            groups.all_projs.add(proj.PortalBullet(self.pos.x, self.pos.y, vel_x, vel_y))
+            net.send_fire(
+                "portal_bullet",
+                self.pos.x - self.room.pos.x,
+                self.pos.y - self.room.pos.y,
+                vel_x,
+                vel_y,
+                8,
+                8
+            )
             self.can_portal = False
 
         elif ctrl.key_released[3] % 2 != 0 and not self.can_portal:
-            groups.all_projs.add(proj.PortalBullet(self.pos.x, self.pos.y, vel_x, vel_y))
+            net.send_fire(
+                "portal_bullet",
+                self.pos.x - self.room.pos.x,
+                self.pos.y - self.room.pos.y,
+                vel_x,
+                vel_y,
+                8,
+                8
+            )
             self.can_portal = True
 
         # --------------------------- Firing Grappling Hook -------------------------- #
@@ -485,6 +501,7 @@ class ServerRealizer:
             sprite_path: str,
             sprites_per_row: int,
             num_sprites: int,
+            img_offset: int,
             rect_width: int,
             rect_height: int,
             hit_width: int,
@@ -504,7 +521,7 @@ class ServerRealizer:
         vessel = cb.ActorBase()
 
         vessel.add_to_gamestate()
-        vessel.set_images(os.path.join(os.getcwd(), sprite_path), rect_width, rect_height, sprites_per_row, num_sprites)
+        vessel.set_images(os.path.join(os.getcwd(), sprite_path), rect_width, rect_height, sprites_per_row, num_sprites, img_offset)
         vessel.set_rects(0, 0, rect_width, rect_height, hit_width, hit_height)
 
         return vessel
@@ -522,13 +539,41 @@ class ServerRealizer:
 
     def realize_bullets(self):
         for bid, bullet in net.bullets.items():
-            if bid not in self.local_bullets:
-                self.local_bullets[bid] = self._create_vessel("sprites/bullets/bullets.png", 8, 1, 32, 32, 8, 8)
-                self.local_bullets[bid].pos = vec(bullet["x"] + self.room.pos.x, bullet["y"] + self.room.pos.y)
-                self.local_bullets[bid].rotate_image(calc.get_vec_angle(bullet["vel_x"], bullet["vel_y"]))
-            else:
-                self.local_bullets[bid].pos = vec(bullet["x"] + self.room.pos.x, bullet["y"] + self.room.pos.y)
-                self.local_bullets[bid].center_rects()
+            if bullet["bullet_type"] == "standard":
+                if bid not in self.local_bullets:
+                    self.local_bullets[bid] = self._create_vessel(
+                        "sprites/bullets/bullets.png",
+                        8,
+                        1,
+                        0,
+                        32,
+                        32,
+                        8,
+                        8
+                    )
+                    self.local_bullets[bid].pos = vec(bullet["x"] + self.room.pos.x, bullet["y"] + self.room.pos.y)
+                    self.local_bullets[bid].rotate_image(calc.get_vec_angle(bullet["vel_x"], bullet["vel_y"]))
+                else:
+                    self.local_bullets[bid].pos = vec(bullet["x"] + self.room.pos.x, bullet["y"] + self.room.pos.y)
+                    self.local_bullets[bid].center_rects()
+
+            elif bullet["bullet_type"] == "portal_bullet":
+                if bid not in self.local_bullets:
+                    self.local_bullets[bid] = self._create_vessel(
+                        'sprites/bullets/bullets.png',
+                        8,
+                        5,
+                        8,
+                        32,
+                        32,
+                        8,
+                        8
+                    )
+                    self.local_bullets[bid].pos = vec(bullet["x"] + self.room.pos.x, bullet["y"] + self.room.pos.y)
+                    self.local_bullets[bid].rotate_image(calc.get_vec_angle(bullet["vel_x"], bullet["vel_y"]))
+                else:
+                    self.local_bullets[bid].pos = vec(bullet["x"] + self.room.pos.x, bullet["y"] + self.room.pos.y)
+                    self.local_bullets[bid].center_rects()
 
         # Destroy realization when server says bullet is dead
         for b_tup in [tup for tup in self.local_bullets.items() if tup[0] not in net.bullets.keys()]:
