@@ -26,6 +26,8 @@ from netclient import NetClient
 
 net = NetClient("localhost", 12345)
 
+while not net.wait_for_handshake():
+    pass
 
 class PlayerGun(cb.ActorBase):
     def __init__(self, owner, weapon: str):

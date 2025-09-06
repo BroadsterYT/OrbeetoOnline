@@ -17,8 +17,6 @@ import gamestack as gs
 import rooms
 import visuals
 
-from netclient import NetClient
-
 
 pygame.init()
 pygame.display.set_caption('Orbeeto')
