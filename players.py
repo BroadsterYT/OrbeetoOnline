@@ -73,6 +73,8 @@ class PlayerGun(cb.ActorBase):
     @cb.check_update_state
     def update(self):
         """Updates the gun sprite. This also updates animation"""
+        #checks for client-server connection
+        net.wait_for_handshake()
         self.pos = self.owner.pos
         self.rotate_image(calc.get_angle_to_mouse(self.owner))
         self.center_rects()

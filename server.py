@@ -11,6 +11,18 @@ class PlayerChannel(Channel):
         self.id = None
         self.state = {"x": 0, "y": 0, "hp": 50}
 
+    def Network_init(self,data):
+        """This becomes executed when client sends initialization request to the server"""
+        """Server sends acknowledgement back to the client"""
+        if self.id is None:
+            self.id = self._server.next_player_id
+            self._server.next_player_id +=1
+            self._server.players[self.id] = self
+
+        print(f"Client {data.get('name', 'unknown')} requested to join. Assigned ID {self.id}")
+        name = data.get('name')
+        self.Send({"action": "ack", "message": f"{name} is good to go!", "id": self.id})
+
     def Network_move(self, data):
         if self.state["hp"] > 0:
             self.state["x"] = data["x"]
@@ -49,7 +61,6 @@ class OrbeetoServer(Server):
         channel.id = self.next_player_id
         self.players[channel.id] = channel
         self.next_player_id += 1
-        channel.Send({"action": "init", "id": channel.id})
         print(f"Player {channel.id} connected.")
 
     def remove_player(self, channel):
