@@ -482,6 +482,7 @@ class Player(cb.ActorBase):
 
         self.realizer.realize_players()
         self.realizer.realize_bullets()
+        self.realizer.realize_portals()
 
     def _animate(self):
         pass
@@ -495,6 +496,7 @@ class ServerRealizer:
         self.room = cb.get_room()
         self.local_players = {}
         self.local_bullets = {}
+        self.local_portals = {}
 
     @staticmethod
     def _create_vessel(
@@ -578,6 +580,32 @@ class ServerRealizer:
         # Destroy realization when server says bullet is dead
         for b_tup in [tup for tup in self.local_bullets.items() if tup[0] not in net.bullets.keys()]:
             b_tup[1].in_gamestate = False
+
+    def realize_portals(self):
+        print(len(net.portals))
+        for pid, portal in net.portals.items():
+            if pid not in self.local_portals:
+                self.local_portals[pid] = self._create_vessel(
+                    "sprites/portals/portals.png",
+                    8,
+                    16,
+                    0,
+                    64,
+                    64,
+                    64,
+                    64,
+                )
+
+                self.local_portals[pid].pos = vec(portal["x"] + self.room.pos.x, portal["y"] + self.room.pos.y)
+
+                if portal["facing"] == cst.EAST or portal["facing"] == cst.WEST:
+                    self.local_portals[pid].rotate_image(90)
+            else:
+                self.local_portals[pid].pos = vec(portal["x"] + self.room.pos.x, portal["y"] + self.room.pos.y)
+                self.local_portals[pid].center_rects()
+
+        for p_tup in [tup for tup in self.local_portals.items() if tup[0] not in net.portals.keys()]:
+            p_tup[1].in_gamestate = False
 
 
 if __name__ == '__main__':

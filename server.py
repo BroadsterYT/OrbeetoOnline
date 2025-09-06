@@ -3,6 +3,7 @@ from PodSixNet.Channel import Channel
 
 from server_rooms import ServerRoom
 import calc
+import copy
 import constants as cst
 
 import pygame
@@ -46,8 +47,11 @@ class OrbeetoServer(Server):
         self.players = {}
         self.bullets = {}
         self.walls = {}
+        self.portals = {}
+
         self.next_player_id = 0
         self.next_bullet_id = 0
+        self.next_portal_id = 0
 
         self.current_room = vec(0, 0)
         self._build_room(0, 0)
@@ -99,6 +103,79 @@ class OrbeetoServer(Server):
             for client in self.players.values():
                 client.Send(bullet_destroyed)
 
+    def spawn_portal(self, owner, landed_on_data, facing, bullet_x, bullet_y):
+        portal_id = self.next_portal_id
+        self.next_portal_id += 1
+
+        true_x = bullet_x
+        true_y = bullet_y
+        hit_width = 54
+        hit_height = 20
+
+        if facing == cst.SOUTH:
+            true_y = landed_on_data["y"] + landed_on_data["hit_h"] // 2
+        elif facing == cst.EAST:
+            true_x = landed_on_data["x"] + landed_on_data["hit_w"] // 2
+            hit_width = 20
+            hit_height = 54
+        elif facing == cst.NORTH:
+            true_y = landed_on_data["y"] - landed_on_data["hit_h"] // 2
+        elif facing == cst.WEST:
+            true_x = landed_on_data["x"] - landed_on_data["hit_w"] // 2
+            hit_width = 20
+            hit_height = 54
+
+        offset_x = true_x - landed_on_data["x"]
+        offset_y = true_y - landed_on_data["y"]
+
+        self.portals[portal_id] = {
+            "owner": owner,
+            "landed_on": landed_on_data,
+            "facing": facing,
+            "x": true_x,
+            "y": true_y,
+            "offset_x": offset_x,
+            "offset_y": offset_y,
+            "hit_w": hit_width,
+            "hit_h": hit_height,
+            "linked_to": None
+        }
+
+        # TODO: Scan list after spawning portal to link portals
+        found = []
+        for pid, portal in [tup for tup in self.portals.items() if tup[1]["owner"] == owner]:
+            found.append(pid)
+
+
+        if len(found) > 2:
+            pid_to_del = min(found)
+            self.destroy_portal(pid_to_del)
+
+            new_link1 = list(self.portals.keys())[0]
+            new_link2 = list(self.portals.keys())[1]
+            print(f"New oldest: {new_link1} | Newest: {new_link2}")
+
+            self.portals[new_link1]["linked_to"] = new_link2
+            self.portals[new_link2]["linked_to"] = new_link1
+            return
+
+        if len(found) == 2:
+            new_link1 = list(self.portals.keys())[0]
+            new_link2 = list(self.portals.keys())[1]
+
+            self.portals[new_link1]["linked_to"] = new_link2
+            self.portals[new_link2]["linked_to"] = new_link1
+            return
+
+    def destroy_portal(self, portal_id):
+        if portal_id in self.portals:
+            del self.portals[portal_id]
+
+        portal_destroyed = {
+            "action": "destroy_portal",
+            "id": portal_id
+        }
+
     def broadcast(self):
         players_state = {
             "action": "update_state",
@@ -107,9 +184,6 @@ class OrbeetoServer(Server):
                 for pid, ch in self.players.items()
             },
         }
-        for ch in self.players.values():
-            ch.Send(players_state)
-
         bullets_state = {
             "action": "update_bullets",
             "bullets": {
@@ -117,9 +191,18 @@ class OrbeetoServer(Server):
                 for bid, bullet in self.bullets.items()
             }
         }
+        portals_state = {
+            "action": "update_portals",
+            "portals": {
+                portal_id: portal
+                for portal_id, portal in self.portals.items()
+            }
+        }
 
         for client in self.players.values():
+            client.Send(players_state)
             client.Send(bullets_state)
+            client.Send(portals_state)
 
     def tick(self):
         to_destroy = []  # Bullets to destroy after iteration
@@ -127,10 +210,12 @@ class OrbeetoServer(Server):
             b["x"] += b["vel_x"] * 0.75
             b["y"] += b["vel_y"] * 0.75
 
-            result = self._handle_bullet_wall_collision(bid, b, to_destroy)
-            if result is not None:
-                side_hit, data_hit = result
-                print(f"Side Hit: {side_hit} | Object Hit: {data_hit}")
+            self._handle_bullets_through_portals(b)
+
+            wall_coll_result = self._handle_bullet_wall_collision(bid, b, to_destroy)
+            if wall_coll_result is not None:
+                side_hit, data_hit = wall_coll_result
+                # TODO: Spawn bullet shatter on client side
 
             # TODO: Find way to reference room
             # Destroy bullets OOB
@@ -140,18 +225,85 @@ class OrbeetoServer(Server):
         for bullet in to_destroy:
             self.destroy_bullet(bullet)
 
+        # Updating Portals
+        for portal_id, portal in self.portals.items():
+            true_x = portal["landed_on"]["x"] + portal["offset_x"]
+            true_y = portal["landed_on"]["y"] + portal["offset_y"]
+
+            portal["x"] = true_x
+            portal["y"] = true_y
+
         self.broadcast()
 
+    def _handle_bullets_through_portals(self, b_data):
+        for portal_id, portal in self.portals.items():
+            bullet_hitbox = pygame.Rect(
+                b_data["x"] - b_data["hit_w"] // 2,
+                b_data["y"] - b_data["hit_h"] // 2,
+                b_data["hit_w"],
+                b_data["hit_h"]
+            )
+
+            portal_hitbox = pygame.Rect(
+                portal["x"] - portal["hit_w"] // 2,
+                portal["y"] - portal["hit_h"] // 2,
+                portal["hit_w"],
+                portal["hit_h"]
+            )
+
+            if not bullet_hitbox.colliderect(portal_hitbox):
+                continue
+
+            if portal["linked_to"] is None:
+                print("No connecting portal")
+                continue
+
+            other_portal = self.portals[portal["linked_to"]]
+            dir_in = portal["facing"]
+            dir_out = other_portal["facing"]
+
+            dist_offset = copy.copy(b_data["x"]) - copy.copy(portal["x"])
+            dir_list = {cst.SOUTH: 180, cst.EAST: 90, cst.NORTH: 0, cst.WEST: 270}
+
+            if dir_in == cst.EAST:
+                dir_list.update({cst.EAST: 180, cst.NORTH: 90, cst.WEST: 0, cst.SOUTH: 270})
+                dist_offset = copy.copy(b_data["y"]) - copy.copy(portal["y"])
+            elif dir_in == cst.NORTH:
+                dir_list.update({cst.NORTH: 180, cst.WEST: 90, cst.SOUTH: 0, cst.EAST: 270})
+            elif dir_in == cst.WEST:
+                dir_list.update({cst.WEST: 180, cst.SOUTH: 90, cst.EAST: 0, cst.NORTH: 270})
+                dist_offset = copy.copy(b_data["y"]) - copy.copy(portal["y"])
+
+            # Aligning sprite at other portal
+            out_width = (other_portal["hit_w"] + b_data["hit_w"]) // 2
+            out_height = (other_portal["hit_h"] + b_data["hit_h"]) // 2
+
+            if dir_out == cst.SOUTH:
+                b_data["x"] = other_portal["x"] - dist_offset
+                b_data["y"] = other_portal["y"] + out_height
+            elif dir_out == cst.EAST:
+                b_data["x"] = other_portal["x"] + out_width
+                b_data["y"] = other_portal["y"] - dist_offset
+            elif dir_out == cst.NORTH:
+                b_data["x"] = other_portal["x"] + dist_offset
+                b_data["y"] = other_portal["y"] - out_height
+            elif dir_out == cst.WEST:
+                b_data["x"] = other_portal["x"] - out_width
+                b_data["y"] = other_portal["y"] + dist_offset
+
+            current_bullet_vel = vec(b_data["vel_x"], b_data["vel_y"])
+            new_bullet_vel = current_bullet_vel.rotate(dir_list[dir_out])
+            b_data["vel_x"] = new_bullet_vel.x
+            b_data["vel_y"] = new_bullet_vel.y
+
+
     def _handle_bullet_wall_collision(self, bid: int, b_data: dict[str, any], destroy_list: list[int]):
-        """
+        """Handles collisions between bullets and walls.
 
         :param b_data: Bullet data being evaluated
         :param destroy_list: A list containing all bullet IDs to be deleted after iterating all bullets
-        :return:
+        :return: The side the bullet hit a wall and the wall object data
         """
-        if b_data["bullet_type"] == "portal_bullet":
-            return
-
         for wall_id, wall in self.walls.items():
             bullet_hitbox = pygame.Rect(
                 b_data["x"] - b_data["hit_w"] // 2,
@@ -177,10 +329,13 @@ class OrbeetoServer(Server):
             wall_hit = vec(wall_width, wall_height)
             side = calc.triangle_collide(instig_vec, wall_vec, wall_hit)
 
-            destroy_list.append(bid)
+            if b_data["bullet_type"] == "standard":
+                destroy_list.append(bid)
+            elif b_data["bullet_type"] == "portal_bullet":
+                destroy_list.append(bid)
+                self.spawn_portal(b_data["owner"], wall, side, b_data["x"], b_data["y"])
+
             return side, wall
-
-
 
 
 if __name__ == "__main__":

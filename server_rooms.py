@@ -31,7 +31,9 @@ class ServerRoom:
             "block_width": block_width,
             "block_height": block_height,
             "width": width,
-            "height": height
+            "height": height,
+            "hit_w": width * block_width,
+            "hit_h": height * block_height
         }
         return wall
 

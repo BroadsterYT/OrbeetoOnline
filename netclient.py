@@ -8,6 +8,7 @@ class NetClient(ConnectionListener):
         self.my_id = None
         self.players = {}
         self.bullets = {}
+        self.portals = {}
 
     def Network_init(self, data):
         self.my_id = data["id"]
@@ -15,16 +16,22 @@ class NetClient(ConnectionListener):
 
     def Network_update_state(self, data):
         self.players = data["players"]
-        # print("Players updated")
 
     def Network_update_bullets(self, data):
         self.bullets = data["bullets"]
-        # print("Bullets updated")
 
     def Network_destroy_bullet(self, data):
         bullet_id = data["id"]
         if bullet_id in self.bullets:
             del self.bullets[bullet_id]
+
+    def Network_update_portals(self, data):
+        self.portals = data["portals"]
+
+    def Network_destroy_portal(self, data):
+        portal_id = data["id"]
+        if portal_id in self.portals:
+            del self.portals[portal_id]
 
     def Network(self, data):
         # print("Unhandled message: ", data)
