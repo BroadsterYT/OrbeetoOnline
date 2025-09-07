@@ -298,41 +298,6 @@ class OrbeetoServer(Server):
             b_data["vel_x"] = new_bullet_vel.x
             b_data["vel_y"] = new_bullet_vel.y
 
-    def _handle_player_wall_collision(self, player):
-        player_hitbox = pygame.Rect(
-            player["x"] - player["hit_w"] // 2,
-            player["y"] - player["hit_h"] // 2,
-            player["hit_w"],
-            player["hit_h"],
-        )
-
-        for wall_id, wall in self.walls.items():
-            wall_width = wall["width"] * wall["block_width"]
-            wall_height = wall["height"] * wall["block_height"]
-            wall_hitbox = pygame.Rect(
-                wall["x"] - wall_width // 2,
-                wall["y"] - wall_height // 2,
-                wall_width,
-                wall_height
-            )
-
-            if not player_hitbox.colliderect(wall_hitbox):
-                continue
-
-            instig_vec = vec(player["x"], player["y"])
-            wall_vec = vec(wall["x"], wall["y"])
-            wall_hit = vec(wall_width, wall_height)
-            side = calc.triangle_collide(instig_vec, wall_vec, wall_hit)
-
-            if side == cst.SOUTH:
-                pass
-            elif side == cst.EAST:
-                pass
-            elif side == cst.NORTH:
-                pass
-            elif side == cst.WEST:
-                pass
-
     def _handle_bullet_wall_collision(self, bid: int, b_data: dict[str, any], destroy_list: list[int]):
         """Handles collisions between bullets and walls.
 
