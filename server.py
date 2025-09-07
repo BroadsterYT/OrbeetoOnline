@@ -16,6 +16,9 @@ class PlayerChannel(Channel):
         self.id = None
         self.state = {"x": 0, "y": 0, "hp": 50}
 
+    def Network_ping(self, data):
+        self.Send({"action": "pong"})
+
     def Network_move(self, data):
         if self.state["hp"] > 0:
             self.state["x"] = data["x"]
@@ -296,7 +299,6 @@ class OrbeetoServer(Server):
             b_data["vel_x"] = new_bullet_vel.x
             b_data["vel_y"] = new_bullet_vel.y
 
-
     def _handle_bullet_wall_collision(self, bid: int, b_data: dict[str, any], destroy_list: list[int]):
         """Handles collisions between bullets and walls.
 
@@ -344,7 +346,7 @@ if __name__ == "__main__":
     server = OrbeetoServer()
     print(f"Server running on {server.socket.getsockname()}")
     while True:
-        server.Pump()
         server.tick()
+        server.Pump()
 
         time.sleep(0.01)

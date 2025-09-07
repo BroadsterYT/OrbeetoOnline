@@ -478,7 +478,7 @@ class Player(cb.ActorBase):
             self.kill()
 
         net.send_move(self.pos.x - self.room.pos.x, self.pos.y - self.room.pos.y)
-        net.pump()
+        net.Loop()
 
         self.realizer.realize_players()
         self.realizer.realize_bullets()
@@ -582,7 +582,6 @@ class ServerRealizer:
             b_tup[1].in_gamestate = False
 
     def realize_portals(self):
-        print(len(net.portals))
         for pid, portal in net.portals.items():
             if pid not in self.local_portals:
                 self.local_portals[pid] = self._create_vessel(

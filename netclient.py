@@ -1,4 +1,8 @@
 from PodSixNet.Connection import connection, ConnectionListener
+import time
+
+PING_INTERVAL = 2
+PING_TIMEOUT = 5
 
 
 class NetClient(ConnectionListener):
@@ -10,9 +14,16 @@ class NetClient(ConnectionListener):
         self.bullets = {}
         self.portals = {}
 
+        self.last_ping = 0
+        self.last_pong = time.time()
+
     def Network_init(self, data):
         self.my_id = data["id"]
         print(f"Connected as Player {self.my_id}")
+
+    def Network_pong(self, data):
+        print("Pong received")
+        self.last_pong = time.time()
 
     def Network_update_state(self, data):
         self.players = data["players"]
@@ -33,6 +44,18 @@ class NetClient(ConnectionListener):
         if portal_id in self.portals:
             del self.portals[portal_id]
 
+    def Loop(self):
+        connection.Pump()
+        self.Pump()
+
+        now = time.time()
+        if now - self.last_pong > PING_INTERVAL:
+            connection.Send({"action": "ping"})
+            print("Ping sent.")
+
+        if now - self.last_pong > PING_TIMEOUT:
+            exit(0)
+
     def Network(self, data):
         # print("Unhandled message: ", data)
         pass
@@ -52,7 +75,3 @@ class NetClient(ConnectionListener):
             "hit_w": hit_w,
             "hit_h": hit_h
         })
-
-    def pump(self):
-        connection.Pump()
-        self.Pump()
