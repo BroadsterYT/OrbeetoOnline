@@ -889,30 +889,11 @@ class Room(cb.AbstractBase):
         """
         if self.room == vec(0, 0):
             return [
-                tiles.Wall(0, 0, 4, 41),
+                tiles.Wall(0, 0, 4, 41, 0, -1, True),
                 # tiles.CustomWall(cst.WINWIDTH // 2, cst.WINHEIGHT // 2,
                 #                  'xx\nxo', 64)
-                trinkets.Box(300, 300)
+                # trinkets.Box(300, 300)
             ]
-
-        elif self.room == vec(0, 1):
-            return [
-                tiles.Wall(320, 180, 16, 4),
-                tiles.Wall(320, 180, 4, 8),
-                # trinkets.Box(cst.WINWIDTH // 2, cst.WINHEIGHT // 2),
-                # enemies.Ambusher(cst.WINWIDTH // 2, cst.WINHEIGHT // 2)
-            ]
-
-        elif self.room == vec(0, 2):
-            return [
-                tiles.Wall(600, 400, 16, 4),
-            ]
-
-        elif self.room == vec(1, 0):
-            return [
-
-            ]
-
         else:
             raise RuntimeError(f'No room layout associated with room {self.room}.')
 

@@ -14,7 +14,7 @@ class PlayerChannel(Channel):
     def __init__(self, *args, **kwargs):
         Channel.__init__(self, *args, **kwargs)
         self.id = None
-        self.state = {"x": 0, "y": 0, "hp": 50}
+        self.state = {"x": 0, "y": 0, "hp": 50, "hit_w": 32, "hit_h": 32}
 
     def Network_ping(self, data):
         self.Send({"action": "pong"})
@@ -149,7 +149,6 @@ class OrbeetoServer(Server):
         for pid, portal in [tup for tup in self.portals.items() if tup[1]["owner"] == owner]:
             found.append(pid)
 
-
         if len(found) > 2:
             pid_to_del = min(found)
             self.destroy_portal(pid_to_del)
@@ -174,14 +173,9 @@ class OrbeetoServer(Server):
         if portal_id in self.portals:
             del self.portals[portal_id]
 
-        portal_destroyed = {
-            "action": "destroy_portal",
-            "id": portal_id
-        }
-
     def broadcast(self):
         players_state = {
-            "action": "update_state",
+            "action": "update_players",
             "players": {
                 pid: ch.state
                 for pid, ch in self.players.items()
@@ -201,11 +195,19 @@ class OrbeetoServer(Server):
                 for portal_id, portal in self.portals.items()
             }
         }
+        walls_state = {
+            "action": "update_walls",
+            "walls": {
+                wall_id: wall
+                for wall_id, wall in self.walls.items()
+            }
+        }
 
         for client in self.players.values():
             client.Send(players_state)
             client.Send(bullets_state)
             client.Send(portals_state)
+            client.Send(walls_state)
 
     def tick(self):
         to_destroy = []  # Bullets to destroy after iteration
@@ -230,11 +232,8 @@ class OrbeetoServer(Server):
 
         # Updating Portals
         for portal_id, portal in self.portals.items():
-            true_x = portal["landed_on"]["x"] + portal["offset_x"]
-            true_y = portal["landed_on"]["y"] + portal["offset_y"]
-
-            portal["x"] = true_x
-            portal["y"] = true_y
+            portal["x"] = portal["landed_on"]["x"] + portal["offset_x"]
+            portal["y"] = portal["landed_on"]["y"] + portal["offset_y"]
 
         self.broadcast()
 
@@ -298,6 +297,41 @@ class OrbeetoServer(Server):
             new_bullet_vel = current_bullet_vel.rotate(dir_list[dir_out])
             b_data["vel_x"] = new_bullet_vel.x
             b_data["vel_y"] = new_bullet_vel.y
+
+    def _handle_player_wall_collision(self, player):
+        player_hitbox = pygame.Rect(
+            player["x"] - player["hit_w"] // 2,
+            player["y"] - player["hit_h"] // 2,
+            player["hit_w"],
+            player["hit_h"],
+        )
+
+        for wall_id, wall in self.walls.items():
+            wall_width = wall["width"] * wall["block_width"]
+            wall_height = wall["height"] * wall["block_height"]
+            wall_hitbox = pygame.Rect(
+                wall["x"] - wall_width // 2,
+                wall["y"] - wall_height // 2,
+                wall_width,
+                wall_height
+            )
+
+            if not player_hitbox.colliderect(wall_hitbox):
+                continue
+
+            instig_vec = vec(player["x"], player["y"])
+            wall_vec = vec(wall["x"], wall["y"])
+            wall_hit = vec(wall_width, wall_height)
+            side = calc.triangle_collide(instig_vec, wall_vec, wall_hit)
+
+            if side == cst.SOUTH:
+                pass
+            elif side == cst.EAST:
+                pass
+            elif side == cst.NORTH:
+                pass
+            elif side == cst.WEST:
+                pass
 
     def _handle_bullet_wall_collision(self, bid: int, b_data: dict[str, any], destroy_list: list[int]):
         """Handles collisions between bullets and walls.

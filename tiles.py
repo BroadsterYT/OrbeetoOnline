@@ -19,8 +19,10 @@ def fancy_tile_texture(block_width: int, block_height: int, textures: list, colo
     image_width, image_height = final_image.get_size()
     texture_width, texture_height = 16, 16
 
+    if style == -1:
+        pass
     # No borders
-    if style == 0:
+    elif style == 0:
         for x in range(0, image_width, texture_width):
             for y in range(0, image_height, texture_height):
                 tile_rect = pygame.Rect(x, y, texture_width, texture_height)
@@ -75,7 +77,7 @@ class TileBase(cb.ActorBase):
 
 class Wall(TileBase):
     def __init__(self, pos_x: float, pos_y: float, block_width: int, block_height: int,
-                 image_row: int = 0, style: int = 0):
+                 image_row: int = 0, style: int = 0, add_to_group: bool = False):
         """A wall that cannot be passed or obstructed.
 
         :param pos_x: The x-axis position to spawn the wall on the block grid (1 block = 16 pixels)
@@ -88,7 +90,9 @@ class Wall(TileBase):
         super().__init__(pos_x, pos_y, block_width, block_height)
         self.layer = cst.LAYER['wall'] + 1
         self.add_to_gamestate()
-        groups.all_walls.add(self)
+
+        if add_to_group:
+            groups.all_walls.add(self)
 
         self.pos = self.place_top_left(pos_x, pos_y)
 

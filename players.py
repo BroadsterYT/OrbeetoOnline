@@ -17,6 +17,7 @@ import calc
 import classbases as cb
 import constants as cst
 import groups
+import realizer
 import statbars
 import text
 import timer
@@ -105,7 +106,7 @@ class Player(cb.ActorBase):
         self.accel_const = 0.58
 
         self.local_players = {}
-        self.realizer = ServerRealizer()
+        self.realizer = realizer.ServerRealizer(net)
 
         # -------------------------------- Game Stats -------------------------------- #
         self._xp = 0
@@ -480,6 +481,7 @@ class Player(cb.ActorBase):
         net.send_move(self.pos.x - self.room.pos.x, self.pos.y - self.room.pos.y)
         net.Loop()
 
+        self.realizer.realize_walls()
         self.realizer.realize_players()
         self.realizer.realize_bullets()
         self.realizer.realize_portals()
@@ -489,122 +491,6 @@ class Player(cb.ActorBase):
 
     def __repr__(self):
         return f'Player({self.pos}, {self.vel}, {self.accel})'
-
-
-class ServerRealizer:
-    def __init__(self):
-        self.room = cb.get_room()
-        self.local_players = {}
-        self.local_bullets = {}
-        self.local_portals = {}
-
-    @staticmethod
-    def _create_vessel(
-            sprite_path: str,
-            sprites_per_row: int,
-            num_sprites: int,
-            img_offset: int,
-            rect_width: int,
-            rect_height: int,
-            hit_width: int,
-            hit_height: int
-    ) -> cb.ActorBase:
-        """Creates an empty vessel to display on client-side
-
-        :param sprite_path:
-        :param sprites_per_row:
-        :param num_sprites:
-        :param rect_width:
-        :param rect_height:
-        :param hit_width:
-        :param hit_height:
-        :return: The created actor
-        """
-        vessel = cb.ActorBase()
-
-        vessel.add_to_gamestate()
-        vessel.set_images(os.path.join(os.getcwd(), sprite_path), rect_width, rect_height, sprites_per_row, num_sprites, img_offset)
-        vessel.set_rects(0, 0, rect_width, rect_height, hit_width, hit_height)
-
-        return vessel
-
-    def realize_players(self):
-        for pid, state in net.players.items():
-            if pid not in self.local_players:
-                if pid != net.my_id:
-                    self.local_players[pid] = self._create_vessel("sprites/orbeeto/orbeeto.png", 5, 5, 64, 64, 32, 32)
-                    self.local_players[pid].pos = vec(state["x"] + self.room.pos.x, state["y"] + self.room.pos.y)
-            else:
-                self.local_players[pid].pos = vec(state["x"] + self.room.pos.x, state["y"] + self.room.pos.y)
-                self.local_players[pid].render_images()
-                self.local_players[pid].center_rects()
-
-    def realize_bullets(self):
-        for bid, bullet in net.bullets.items():
-            if bullet["bullet_type"] == "standard":
-                if bid not in self.local_bullets:
-                    self.local_bullets[bid] = self._create_vessel(
-                        "sprites/bullets/bullets.png",
-                        8,
-                        1,
-                        0,
-                        32,
-                        32,
-                        8,
-                        8
-                    )
-                    self.local_bullets[bid].pos = vec(bullet["x"] + self.room.pos.x, bullet["y"] + self.room.pos.y)
-                    self.local_bullets[bid].rotate_image(calc.get_vec_angle(bullet["vel_x"], bullet["vel_y"]))
-                else:
-                    self.local_bullets[bid].pos = vec(bullet["x"] + self.room.pos.x, bullet["y"] + self.room.pos.y)
-                    self.local_bullets[bid].center_rects()
-
-            elif bullet["bullet_type"] == "portal_bullet":
-                if bid not in self.local_bullets:
-                    self.local_bullets[bid] = self._create_vessel(
-                        'sprites/bullets/bullets.png',
-                        8,
-                        5,
-                        8,
-                        32,
-                        32,
-                        8,
-                        8
-                    )
-                    self.local_bullets[bid].pos = vec(bullet["x"] + self.room.pos.x, bullet["y"] + self.room.pos.y)
-                    self.local_bullets[bid].rotate_image(calc.get_vec_angle(bullet["vel_x"], bullet["vel_y"]))
-                else:
-                    self.local_bullets[bid].pos = vec(bullet["x"] + self.room.pos.x, bullet["y"] + self.room.pos.y)
-                    self.local_bullets[bid].center_rects()
-
-        # Destroy realization when server says bullet is dead
-        for b_tup in [tup for tup in self.local_bullets.items() if tup[0] not in net.bullets.keys()]:
-            b_tup[1].in_gamestate = False
-
-    def realize_portals(self):
-        for pid, portal in net.portals.items():
-            if pid not in self.local_portals:
-                self.local_portals[pid] = self._create_vessel(
-                    "sprites/portals/portals.png",
-                    8,
-                    16,
-                    0,
-                    64,
-                    64,
-                    64,
-                    64,
-                )
-
-                self.local_portals[pid].pos = vec(portal["x"] + self.room.pos.x, portal["y"] + self.room.pos.y)
-
-                if portal["facing"] == cst.EAST or portal["facing"] == cst.WEST:
-                    self.local_portals[pid].rotate_image(90)
-            else:
-                self.local_portals[pid].pos = vec(portal["x"] + self.room.pos.x, portal["y"] + self.room.pos.y)
-                self.local_portals[pid].center_rects()
-
-        for p_tup in [tup for tup in self.local_portals.items() if tup[0] not in net.portals.keys()]:
-            p_tup[1].in_gamestate = False
 
 
 if __name__ == '__main__':

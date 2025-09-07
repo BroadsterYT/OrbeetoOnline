@@ -13,6 +13,7 @@ class NetClient(ConnectionListener):
         self.players = {}
         self.bullets = {}
         self.portals = {}
+        self.walls = {}
 
         self.last_ping = 0
         self.last_pong = time.time()
@@ -25,7 +26,7 @@ class NetClient(ConnectionListener):
         print("Pong received")
         self.last_pong = time.time()
 
-    def Network_update_state(self, data):
+    def Network_update_players(self, data):
         self.players = data["players"]
 
     def Network_update_bullets(self, data):
@@ -43,6 +44,9 @@ class NetClient(ConnectionListener):
         portal_id = data["id"]
         if portal_id in self.portals:
             del self.portals[portal_id]
+
+    def Network_update_walls(self, data):
+        self.walls = data["walls"]
 
     def Loop(self):
         connection.Pump()
