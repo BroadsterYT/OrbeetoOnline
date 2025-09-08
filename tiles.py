@@ -67,7 +67,7 @@ class TileBase(cb.ActorBase):
 
     def movement(self):
         if self.in_gamestate:
-            self.set_room_pos()
+            # self.set_room_pos()
             self.accel = self.get_accel()
             self.accel_movement()
 

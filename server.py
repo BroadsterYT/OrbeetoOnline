@@ -14,7 +14,15 @@ class PlayerChannel(Channel):
     def __init__(self, *args, **kwargs):
         Channel.__init__(self, *args, **kwargs)
         self.id = None
-        self.state = {"x": 0, "y": 0, "hp": 50, "hit_w": 32, "hit_h": 32}
+        self.state = {
+            "x": 0,
+            "y": 0,
+            "vel_x": 0,
+            "vel_y": 0,
+            "hp": 50,
+            "hit_w": 32,
+            "hit_h": 32
+        }
 
     def Network_ping(self, data):
         self.Send({"action": "pong"})
@@ -149,12 +157,15 @@ class OrbeetoServer(Server):
         for pid, portal in [tup for tup in self.portals.items() if tup[1]["owner"] == owner]:
             found.append(pid)
 
+        print(len(found))
+
         if len(found) > 2:
             pid_to_del = min(found)
+            del found[found.index(pid_to_del)]
             self.destroy_portal(pid_to_del)
 
-            new_link1 = list(self.portals.keys())[0]
-            new_link2 = list(self.portals.keys())[1]
+            new_link1 = found[0]
+            new_link2 = found[1]
             print(f"New oldest: {new_link1} | Newest: {new_link2}")
 
             self.portals[new_link1]["linked_to"] = new_link2
@@ -162,8 +173,8 @@ class OrbeetoServer(Server):
             return
 
         if len(found) == 2:
-            new_link1 = list(self.portals.keys())[0]
-            new_link2 = list(self.portals.keys())[1]
+            new_link1 = found[0]
+            new_link2 = found[1]
 
             self.portals[new_link1]["linked_to"] = new_link2
             self.portals[new_link2]["linked_to"] = new_link1
@@ -210,6 +221,9 @@ class OrbeetoServer(Server):
             client.Send(walls_state)
 
     def tick(self):
+        for pid, ch in self.players.items():
+            self._handle_player_teleport(ch.state)
+
         to_destroy = []  # Bullets to destroy after iteration
         for bid, b in self.bullets.items():
             b["x"] += b["vel_x"] * 0.75
@@ -237,15 +251,47 @@ class OrbeetoServer(Server):
 
         self.broadcast()
 
-    def _handle_bullets_through_portals(self, b_data):
+    def _handle_player_teleport(self, player):
+        player_hitbox = pygame.Rect(
+            player["x"] - player["hit_w"] // 2,
+            player["y"] - player["hit_h"] // 2,
+            player["hit_w"],
+            player["hit_h"]
+        )
+
         for portal_id, portal in self.portals.items():
-            bullet_hitbox = pygame.Rect(
-                b_data["x"] - b_data["hit_w"] // 2,
-                b_data["y"] - b_data["hit_h"] // 2,
-                b_data["hit_w"],
-                b_data["hit_h"]
+            portal_hitbox = pygame.Rect(
+                portal["x"] - portal["hit_w"] // 2,
+                portal["y"] - portal["hit_h"] // 2,
+                portal["hit_w"],
+                portal["hit_h"]
             )
 
+            if not player_hitbox.colliderect(portal_hitbox):
+                continue
+
+            if portal["linked_to"] is None:
+                # print("No connecting portal")
+                continue
+
+            other_portal = self.portals[portal["linked_to"]]
+
+            for cid, client in self.players.items():
+                client.Send({
+                    "action": "teleport_player",
+                    "player_id": cid,
+                    "portal_out_id": portal["linked_to"],
+                })
+
+    def _handle_bullets_through_portals(self, b_data):
+        bullet_hitbox = pygame.Rect(
+            b_data["x"] - b_data["hit_w"] // 2,
+            b_data["y"] - b_data["hit_h"] // 2,
+            b_data["hit_w"],
+            b_data["hit_h"]
+        )
+
+        for portal_id, portal in self.portals.items():
             portal_hitbox = pygame.Rect(
                 portal["x"] - portal["hit_w"] // 2,
                 portal["y"] - portal["hit_h"] // 2,
@@ -257,7 +303,7 @@ class OrbeetoServer(Server):
                 continue
 
             if portal["linked_to"] is None:
-                print("No connecting portal")
+                # print("No connecting portal")
                 continue
 
             other_portal = self.portals[portal["linked_to"]]

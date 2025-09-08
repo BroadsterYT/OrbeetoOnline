@@ -24,8 +24,6 @@ import timer
 
 from netclient import NetClient
 
-net = NetClient("localhost", 12345)
-
 
 class PlayerGun(cb.ActorBase):
     def __init__(self, owner, weapon: str):
@@ -96,6 +94,7 @@ class Player(cb.ActorBase):
         self.add_to_gamestate()
         groups.all_players.add(self)
         self.room = cb.get_room()
+        self.net = NetClient(self, "localhost", 12345)
 
         # self.last_textbox_release = ctrl.key_released[ctrl.K_DIALOGUE]
 
@@ -106,7 +105,7 @@ class Player(cb.ActorBase):
         self.accel_const = 0.58
 
         self.local_players = {}
-        self.realizer = realizer.ServerRealizer(net)
+        self.realizer = realizer.ServerRealizer(self.net)
 
         # -------------------------------- Game Stats -------------------------------- #
         self._xp = 0
@@ -347,7 +346,7 @@ class Player(cb.ActorBase):
             l_vel_y = self.gun_l.bullet_vel * -math.cos(angle)
 
             if self.gun_l.weapon == items.WEAPONS[0]:
-                net.send_fire(
+                self.net.send_fire(
                     "standard",
                     self.pos.x + l_x_off - self.room.pos.x,
                     self.pos.y + l_y_off - self.room.pos.y,
@@ -371,7 +370,7 @@ class Player(cb.ActorBase):
             r_vel_y = self.gun_r.bullet_vel * -math.cos(angle)
 
             if self.gun_r.weapon == items.WEAPONS[1]:
-                net.send_fire(
+                self.net.send_fire(
                     "standard",
                     self.pos.x + r_x_off - self.room.pos.x,
                     self.pos.y + r_y_off - self.room.pos.y,
@@ -393,7 +392,7 @@ class Player(cb.ActorBase):
         vel_y = self.bullet_vel * -math.cos(angle)
 
         if ctrl.key_released[3] % 2 == 0 and self.can_portal:
-            net.send_fire(
+            self.net.send_fire(
                 "portal_bullet",
                 self.pos.x - self.room.pos.x,
                 self.pos.y - self.room.pos.y,
@@ -405,7 +404,7 @@ class Player(cb.ActorBase):
             self.can_portal = False
 
         elif ctrl.key_released[3] % 2 != 0 and not self.can_portal:
-            net.send_fire(
+            self.net.send_fire(
                 "portal_bullet",
                 self.pos.x - self.room.pos.x,
                 self.pos.y - self.room.pos.y,
@@ -455,9 +454,6 @@ class Player(cb.ActorBase):
         self._animate()
         self.rotate_image(calc.get_angle_to_mouse(self))
 
-        # TODO: Move textbox handling out of player object
-        # self.generate_text_box()
-
         # Heat damage
         if self.gun_heat > self.heat_thresh:
             # Armor starts shaking when overheated
@@ -478,8 +474,11 @@ class Player(cb.ActorBase):
         if self.hp <= 0:
             self.kill()
 
-        net.send_move(self.pos.x - self.room.pos.x, self.pos.y - self.room.pos.y)
-        net.Loop()
+        self.net.send_move(
+            self.pos.x - self.room.pos.x,
+            self.pos.y - self.room.pos.y,
+        )
+        self.net.Loop()
 
         self.realizer.realize_walls()
         self.realizer.realize_players()
