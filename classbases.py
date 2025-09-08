@@ -200,6 +200,8 @@ class ActorBase(pygame.sprite.Sprite):
     def accel_movement(self) -> None:
         """Makes a sprite move according to its acceleration (self.accel and self.accel_const).
         """
+        if self.vel.magnitude() > 25:
+            self.vel = self.vel.normalize() * 25
         self.accel.x += self.vel.x * cst.FRIC
         self.accel.y += self.vel.y * cst.FRIC
         self.vel += self.accel * (screen.dt * cst.M_FPS)

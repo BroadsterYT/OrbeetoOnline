@@ -404,6 +404,8 @@ class Room(cb.AbstractBase):
     def accel_movement(self) -> None:
         """Calculates the room's acceleration, velocity, and position
         """
+        if self.vel.magnitude() > 25:
+            self.vel = self.vel.normalize() * 25
         self.accel.x += self.vel.x * cst.FRIC
         self.accel.y += self.vel.y * cst.FRIC
         self.vel += self.accel * (screen.dt * cst.M_FPS)

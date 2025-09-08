@@ -449,6 +449,7 @@ class Player(cb.ActorBase):
 
     @cb.check_update_state
     def update(self):
+        print(f"Player velocity: {self.room.vel.magnitude()}")
         self.movement()
 
         self._animate()
