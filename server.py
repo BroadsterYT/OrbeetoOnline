@@ -223,7 +223,7 @@ class OrbeetoServer(Server):
 
     def tick(self):
         for pid, ch in self.players.items():
-            self._handle_player_teleport(ch.state)
+            self._handle_player_teleport(pid, ch.state)
 
         to_destroy = []  # Bullets to destroy after iteration
         for bid, b in self.bullets.items():
@@ -252,7 +252,7 @@ class OrbeetoServer(Server):
 
         self.broadcast()
 
-    def _handle_player_teleport(self, player):
+    def _handle_player_teleport(self, player_id, player):
         player_hitbox = pygame.Rect(
             player["x"] - player["hit_w"] // 2,
             player["y"] - player["hit_h"] // 2,
@@ -275,14 +275,12 @@ class OrbeetoServer(Server):
                 # print("No connecting portal")
                 continue
 
-            other_portal = self.portals[portal["linked_to"]]
-
-            for cid, client in self.players.items():
-                client.Send({
-                    "action": "teleport_player",
-                    "player_id": cid,
-                    "portal_out_id": portal["linked_to"],
-                })
+            client = self.players[player_id]
+            client.Send({
+                "action": "teleport_player",
+                "player_id": player_id,
+                "portal_out_id": portal["linked_to"],
+            })
 
     def _handle_bullets_through_portals(self, b_data):
         bullet_hitbox = pygame.Rect(

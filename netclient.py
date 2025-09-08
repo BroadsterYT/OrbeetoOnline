@@ -47,10 +47,8 @@ class NetClient(ConnectionListener):
         self.portals = data["portals"]
 
     def Network_teleport_player(self, data):
-        print("Teleport player!")
+        print(f"Teleport player {data['player_id']}")
         pid = data["player_id"]
-        if pid != self.my_id:
-            return
 
         portal_out = self.portals[data["portal_out_id"]]
         portal_in = self.portals[portal_out["linked_to"]]
