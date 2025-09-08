@@ -4,6 +4,8 @@ import time
 
 from pygame.math import Vector2 as vec
 
+import screen
+
 PING_INTERVAL = 2
 PING_TIMEOUT = 5
 
@@ -64,7 +66,7 @@ class NetClient(ConnectionListener):
         print(f"Player vel: {self.client_player.vel.x}, {self.client_player.vel.y}")
         print(f"Room vel: {self.client_player.room.vel.x}, {self.client_player.room.vel.y}")
 
-        room_vel_before = vec(self.client_player.room.vel.x, self.client_player.room.vel.y)
+        room_vel_before = vec(self.client_player.room.vel.x / (screen.dt * cst.M_FPS), self.client_player.room.vel.y / (screen.dt * cst.M_FPS))
 
         if dir_out == cst.SOUTH:
             self.client_player.pos.x = portal_out["x"]
