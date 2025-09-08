@@ -89,6 +89,7 @@ class ServerRealizer:
                     self.local_bullets[bid].rotate_image(calc.get_vec_angle(bullet["vel_x"], bullet["vel_y"]))
                 else:
                     self.local_bullets[bid].pos = vec(bullet["x"] + self.room.pos.x, bullet["y"] + self.room.pos.y)
+                    self.local_bullets[bid].rotate_image(calc.get_vec_angle(bullet["vel_x"], bullet["vel_y"]))
                     self.local_bullets[bid].center_rects()
 
             elif bullet["bullet_type"] == "portal_bullet":
@@ -107,11 +108,12 @@ class ServerRealizer:
                     self.local_bullets[bid].rotate_image(calc.get_vec_angle(bullet["vel_x"], bullet["vel_y"]))
                 else:
                     self.local_bullets[bid].pos = vec(bullet["x"] + self.room.pos.x, bullet["y"] + self.room.pos.y)
+                    self.local_bullets[bid].rotate_image(calc.get_vec_angle(bullet["vel_x"], bullet["vel_y"]))
                     self.local_bullets[bid].center_rects()
 
         # Destroy realization when server says bullet is dead
         for b_tup in [tup for tup in self.local_bullets.items() if tup[0] not in self.net.bullets.keys()]:
-            b_tup[1].in_gamestate = False
+            b_tup[1].remove_from_gamestate()
 
     def realize_portals(self):
         for pid, portal in self.net.portals.items():
@@ -142,10 +144,10 @@ class ServerRealizer:
         for wall_id, wall in self.net.walls.items():
             if wall_id not in self.local_walls:
                 self.local_walls[wall_id] = tiles.Wall(
-                    0,
-                    0,
-                    4,
-                    41
+                    wall["x"] - wall["hit_w"] // 2,
+                    wall["y"] - wall["hit_h"] // 2,
+                    wall["hit_w"] // wall["block_width"],
+                    wall["hit_h"] // wall["block_height"]
                 )
 
                 self.local_walls[wall_id].pos = vec(wall["x"] + self.room.pos.x, wall["y"] + self.room.pos.y)

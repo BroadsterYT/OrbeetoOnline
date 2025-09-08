@@ -60,44 +60,66 @@ class NetClient(ConnectionListener):
 
         self.client_player.room.last_tp_dirs = (dir_in, dir_out)
 
-        width = (self.players[pid]["hit_w"] + portal_out["hit_w"]) // 2 + 32
-        height = (self.players[pid]["hit_h"] + portal_out["hit_h"]) // 2 + 32
+        width = (self.players[pid]["hit_w"] + portal_out["hit_w"]) // 2 + 4
+        height = (self.players[pid]["hit_h"] + portal_out["hit_h"]) // 2 + 4
+
+        print(f"Player vel: {self.client_player.vel.x}, {self.client_player.vel.y}")
+        print(f"Room vel: {self.client_player.room.vel.x}, {self.client_player.room.vel.y}")
+
+        room_vel_before = vec(self.client_player.room.vel.x, self.client_player.room.vel.y)
 
         if dir_out == cst.SOUTH:
             self.client_player.pos.x = portal_out["x"]
             self.client_player.pos.y = portal_out["y"] + height
+            if dir_in == cst.SOUTH:
+                self.client_player.vel.y += abs(room_vel_before.y)
+            elif dir_in == cst.EAST:
+                self.client_player.vel.x += abs(room_vel_before.y)
+                self.client_player.vel.y += abs(room_vel_before.x)
+            elif dir_in == cst.WEST:
+                self.client_player.vel.x -= abs(room_vel_before.y)
+                self.client_player.vel.y += abs(room_vel_before.x)
+
         elif dir_out == cst.EAST:
             self.client_player.pos.x = portal_out["x"] + width
             self.client_player.pos.y = portal_out["y"]
+            if dir_in == cst.SOUTH:
+                self.client_player.vel.x += abs(room_vel_before.y)
+                self.client_player.vel.y += abs(room_vel_before.x)
+            elif dir_in == cst.EAST:
+                self.client_player.vel.x += abs(room_vel_before.x)
+            elif dir_in == cst.NORTH:
+                self.client_player.vel.x += abs(room_vel_before.y)
+                self.client_player.vel.y -= abs(room_vel_before.x)
+
         elif dir_out == cst.NORTH:
             self.client_player.pos.x = portal_out["x"]
             self.client_player.pos.y = portal_out["y"] - height
+            if dir_in == cst.EAST:
+                self.client_player.vel.x += abs(room_vel_before.y)
+                self.client_player.vel.y -= abs(room_vel_before.x)
+            elif dir_in == cst.NORTH:
+                self.client_player.vel.y -= abs(room_vel_before.y)
+            elif dir_in == cst.WEST:
+                self.client_player.vel.x -= abs(room_vel_before.y)
+                self.client_player.vel.y -= abs(room_vel_before.x)
+
         elif dir_out == cst.WEST:
             self.client_player.pos.x = portal_out["x"] - width
             self.client_player.pos.y = portal_out["y"]
-            # self.client_player.vel.x += 1000
+            if dir_in == cst.SOUTH:
+                self.client_player.vel.x -= abs(room_vel_before.y)
+                self.client_player.vel.y += abs(room_vel_before.x)
+            elif dir_in == cst.NORTH:
+                self.client_player.vel.x -= abs(room_vel_before.y)
+                self.client_player.vel.y -= abs(room_vel_before.x)
+            elif dir_in == cst.WEST:
+                self.client_player.vel.x -= abs(room_vel_before.x)
 
         self.client_player.pos += self.client_player.room.pos
 
         self.client_player.room.update_binds(dir_in, dir_out)
         self.client_player.room.readjust_binds_after_tp(dir_in, dir_out)
-
-        # dir_angles = {cst.SOUTH: 180, cst.EAST: 90, cst.NORTH: 0, cst.WEST: 270}
-        #
-        # if dir_in == cst.EAST:
-        #     dir_angles.update({cst.EAST: 180, cst.NORTH: 90, cst.WEST: 0, cst.SOUTH: 270})
-        # elif dir_in == cst.NORTH:
-        #     dir_angles.update({cst.NORTH: 180, cst.WEST: 90, cst.SOUTH: 0, cst.EAST: 270})
-        # elif dir_in == cst.WEST:
-        #     dir_angles.update({cst.WEST: 180, cst.SOUTH: 90, cst.EAST: 0, cst.NORTH: 270})
-
-        print(f"Before rotation - Room vel: {self.client_player.room.vel}")
-        print(f"Before rotation - Player vel: {self.client_player.vel}")
-        # self.client_player.room.sprites_rotate_trajectory(dir_angles[dir_out])
-        # self.client_player.vel += self.client_player.room.vel
-        self.client_player.room.vel = vec(data["room_vel_x"], data["room_vel_y"])
-        print(f"After rotation - Room vel: {self.client_player.room.vel}")
-        print(f"After rotation - Player vel: {self.client_player.vel}")
 
     def Network_destroy_portal(self, data):
         portal_id = data["id"]

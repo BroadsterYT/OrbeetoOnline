@@ -79,7 +79,8 @@ class OrbeetoServer(Server):
         self.walls.clear()
 
         self.walls = {
-            ServerRoom.get_next_wall_id(): ServerRoom.new_wall(0, 0, 16, 16, 4, 41)
+            ServerRoom.get_next_wall_id(): ServerRoom.new_wall(0, 0, 16, 16, 4, 41),
+            ServerRoom.get_next_wall_id(): ServerRoom.new_wall(256, 256, 16, 16, 16, 16)
         }
 
     def remove_player(self, channel):

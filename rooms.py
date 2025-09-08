@@ -890,6 +890,7 @@ class Room(cb.AbstractBase):
         if self.room == vec(0, 0):
             return [
                 tiles.Wall(0, 0, 4, 41, 0, -1, True),
+                tiles.Wall(256, 256, 16, 16, 0, -1, True),
                 # tiles.CustomWall(cst.WINWIDTH // 2, cst.WINHEIGHT // 2,
                 #                  'xx\nxo', 64)
                 # trinkets.Box(300, 300)
