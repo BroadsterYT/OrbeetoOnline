@@ -231,6 +231,7 @@ class OrbeetoServer(Server):
             b["y"] += b["vel_y"] * 0.75
 
             self._handle_bullets_through_portals(b)
+            self._handle_player_hit(b, bid, to_destroy)
 
             wall_coll_result = self._handle_bullet_wall_collision(bid, b, to_destroy)
             if wall_coll_result is not None:
@@ -281,6 +282,32 @@ class OrbeetoServer(Server):
                 "player_id": player_id,
                 "portal_out_id": portal["linked_to"],
             })
+
+    def _handle_player_hit(self, b_data, bid, to_destroy):
+        bullet_hitbox = pygame.Rect(
+            b_data["x"] - b_data["hit_w"] // 2,
+            b_data["y"] - b_data["hit_h"] // 2,
+            b_data["hit_w"],
+            b_data["hit_h"]
+        )
+
+        for pid, ch in self.players.items():
+            player = ch.state
+
+            player_hitbox = pygame.Rect(
+                player["x"] - player["hit_w"] // 2,
+                player["y"] - player["hit_h"] // 2,
+                player["hit_w"],
+                player["hit_h"]
+            )
+
+            if not bullet_hitbox.colliderect(player_hitbox):
+                continue
+
+            # Intentional: let players take damage from own bullets
+            if b_data["bullet_type"] != "portal_bullet":
+                player["hp"] -= 1
+                to_destroy.append(bid)
 
     def _handle_bullets_through_portals(self, b_data):
         bullet_hitbox = pygame.Rect(
@@ -350,14 +377,14 @@ class OrbeetoServer(Server):
         :param destroy_list: A list containing all bullet IDs to be deleted after iterating all bullets
         :return: The side the bullet hit a wall and the wall object data
         """
-        for wall_id, wall in self.walls.items():
-            bullet_hitbox = pygame.Rect(
-                b_data["x"] - b_data["hit_w"] // 2,
-                b_data["y"] - b_data["hit_h"] // 2,
-                b_data["hit_w"],
-                b_data["hit_h"]
-            )
+        bullet_hitbox = pygame.Rect(
+            b_data["x"] - b_data["hit_w"] // 2,
+            b_data["y"] - b_data["hit_h"] // 2,
+            b_data["hit_w"],
+            b_data["hit_h"]
+        )
 
+        for wall_id, wall in self.walls.items():
             wall_width = wall["width"] * wall["block_width"]
             wall_height = wall["height"] * wall["block_height"]
             wall_hitbox = pygame.Rect(

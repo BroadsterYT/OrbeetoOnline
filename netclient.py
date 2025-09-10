@@ -36,6 +36,7 @@ class NetClient(ConnectionListener):
 
     def Network_update_players(self, data):
         self.players = data["players"]
+        self.client_player.hp = self.players[self.my_id]["hp"]
 
     def Network_update_bullets(self, data):
         self.bullets = data["bullets"]
