@@ -11,16 +11,18 @@ from pygame.math import Vector2 as vec
 
 import controls as ctrl
 import items
-import menus
 import projectiles as proj
 
 import calc
 import classbases as cb
 import constants as cst
 import groups
+import realizer
 import statbars
 import text
 import timer
+
+from netclient import NetClient
 
 
 class PlayerGun(cb.ActorBase):
@@ -86,11 +88,13 @@ class PlayerGun(cb.ActorBase):
 
 class Player(cb.ActorBase):
     """A player sprite that can move and shoot."""
+
     def __init__(self):
         super().__init__(cst.LAYER['player'])
         self.add_to_gamestate()
         groups.all_players.add(self)
         self.room = cb.get_room()
+        self.net = NetClient(self, "localhost", 12345)
 
         # self.last_textbox_release = ctrl.key_released[ctrl.K_DIALOGUE]
 
@@ -99,6 +103,9 @@ class Player(cb.ActorBase):
 
         self.pos = vec((cst.WINWIDTH // 2, cst.WINHEIGHT // 2))
         self.accel_const = 0.58
+
+        self.local_players = {}
+        self.realizer = realizer.ServerRealizer(self.net)
 
         # -------------------------------- Game Stats -------------------------------- #
         self._xp = 0
@@ -339,11 +346,16 @@ class Player(cb.ActorBase):
             l_vel_y = self.gun_l.bullet_vel * -math.cos(angle)
 
             if self.gun_l.weapon == items.WEAPONS[0]:
-                groups.all_projs.add(
-                    # proj.PlayerChakram(self.pos.x + l_x_off, self.pos.y + l_y_off, l_vel_x, l_vel_y)
-                    proj.PlayerStdBullet(self.pos.x + l_x_off, self.pos.y + l_y_off, l_vel_x, l_vel_y)
-                    # proj.PlayerHomingBullet(self.pos.x + l_x_off, self.pos.y + l_y_off, l_vel_x, l_vel_y)
+                self.net.send_fire(
+                    "standard",
+                    self.pos.x + l_x_off - self.room.pos.x,
+                    self.pos.y + l_y_off - self.room.pos.y,
+                    l_vel_x,
+                    l_vel_y,
+                    6,
+                    6,
                 )
+
             elif self.gun_l.weapon == items.WEAPONS[2]:
                 groups.all_projs.add(
                     proj.PlayerChakram(self.pos.x + l_x_off, self.pos.y + l_y_off, l_vel_x, l_vel_y)
@@ -358,8 +370,14 @@ class Player(cb.ActorBase):
             r_vel_y = self.gun_r.bullet_vel * -math.cos(angle)
 
             if self.gun_r.weapon == items.WEAPONS[1]:
-                groups.all_projs.add(
-                    proj.PlayerStdBullet(self.pos.x + r_x_off, self.pos.y + r_y_off, r_vel_x, r_vel_y)
+                self.net.send_fire(
+                    "standard",
+                    self.pos.x + r_x_off - self.room.pos.x,
+                    self.pos.y + r_y_off - self.room.pos.y,
+                    r_vel_x,
+                    r_vel_y,
+                    6,
+                    6
                 )
             else:
                 raise RuntimeError(f'{self.gun_r.weapon} is not a valid weapon for gun_r')
@@ -374,11 +392,27 @@ class Player(cb.ActorBase):
         vel_y = self.bullet_vel * -math.cos(angle)
 
         if ctrl.key_released[3] % 2 == 0 and self.can_portal:
-            groups.all_projs.add(proj.PortalBullet(self.pos.x, self.pos.y, vel_x, vel_y))
+            self.net.send_fire(
+                "portal_bullet",
+                self.pos.x - self.room.pos.x,
+                self.pos.y - self.room.pos.y,
+                vel_x,
+                vel_y,
+                8,
+                8
+            )
             self.can_portal = False
 
         elif ctrl.key_released[3] % 2 != 0 and not self.can_portal:
-            groups.all_projs.add(proj.PortalBullet(self.pos.x, self.pos.y, vel_x, vel_y))
+            self.net.send_fire(
+                "portal_bullet",
+                self.pos.x - self.room.pos.x,
+                self.pos.y - self.room.pos.y,
+                vel_x,
+                vel_y,
+                8,
+                8
+            )
             self.can_portal = True
 
         # --------------------------- Firing Grappling Hook -------------------------- #
@@ -415,13 +449,11 @@ class Player(cb.ActorBase):
 
     @cb.check_update_state
     def update(self):
+        print(f"Player velocity: {self.room.vel.magnitude()}")
         self.movement()
 
         self._animate()
         self.rotate_image(calc.get_angle_to_mouse(self))
-
-        # TODO: Move textbox handling out of player object
-        # self.generate_text_box()
 
         # Heat damage
         if self.gun_heat > self.heat_thresh:
@@ -442,6 +474,17 @@ class Player(cb.ActorBase):
 
         if self.hp <= 0:
             self.kill()
+
+        self.net.send_move(
+            self.pos.x - self.room.pos.x,
+            self.pos.y - self.room.pos.y,
+        )
+        self.net.Loop()
+
+        self.realizer.realize_walls()
+        self.realizer.realize_players()
+        self.realizer.realize_bullets()
+        self.realizer.realize_portals()
 
     def _animate(self):
         pass

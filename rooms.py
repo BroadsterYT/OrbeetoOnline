@@ -188,7 +188,7 @@ class Room(cb.AbstractBase):
 
         self.layout_update()
 
-    def _update_binds(self, dir_in, dir_out) -> None:
+    def update_binds(self, dir_in, dir_out) -> None:
         """Updates the movement binds of the room to smooth movement between portals
 
         :param dir_in: The direction of the entrance portal
@@ -240,7 +240,7 @@ class Room(cb.AbstractBase):
                                   cst.NORTH: ctrl.K_MOVE_DOWN, cst.WEST: ctrl.K_MOVE_RIGHT})
         self.binds = new_binds
 
-    def _readjust_binds_after_tp(self, dir_in: str, dir_out: str) -> None:
+    def readjust_binds_after_tp(self, dir_in: str, dir_out: str) -> None:
         """Readjusts the movement binds set when teleporting to account for keys that were not held.
         The binds for the keys not held will be reset to their defaults.
 
@@ -324,7 +324,7 @@ class Room(cb.AbstractBase):
                 self.binds[cst.SOUTH] = ctrl.K_MOVE_UP
                 self.binds[cst.NORTH] = ctrl.K_MOVE_DOWN
 
-    def _hard_reset_binds(self) -> None:
+    def hard_reset_binds(self) -> None:
         """Completely resets the key binds after teleporting
 
         :return: None
@@ -404,6 +404,8 @@ class Room(cb.AbstractBase):
     def accel_movement(self) -> None:
         """Calculates the room's acceleration, velocity, and position
         """
+        if self.vel.magnitude() > 25:
+            self.vel = self.vel.normalize() * 25
         self.accel.x += self.vel.x * cst.FRIC
         self.accel.y += self.vel.y * cst.FRIC
         self.vel += self.accel * (screen.dt * cst.M_FPS)
@@ -493,7 +495,7 @@ class Room(cb.AbstractBase):
                     portal_out = calc.get_other_portal(portal_in)
 
                     if len(groups.all_portals) == 2:
-                        self._teleport_player(portal_in, portal_out)
+                        self.teleport_player(portal_in, portal_out)
 
             for sprite in self._get_sprites_to_recenter():
                 sprite.movement()
@@ -563,7 +565,7 @@ class Room(cb.AbstractBase):
             self.player1.pos.x = portal_out.pos.x - width
             self.player1.pos.y = portal_out.pos.y
 
-    def _teleport_player(self, portal_in, portal_out) -> None:
+    def teleport_player(self, portal_in, portal_out) -> None:
         """Teleports the player when the room is scrolling.
 
         :param portal_in: The portal the player is entering
@@ -579,8 +581,8 @@ class Room(cb.AbstractBase):
         self._align_player_tp(portal_out,
                               (portal_out.hitbox.width + self.player1.hitbox.width) // 2,
                               (portal_out.hitbox.height + self.player1.hitbox.height) // 2)
-        self._update_binds(dir_in, dir_out)
-        self._readjust_binds_after_tp(dir_in, dir_out)  # If the key wasn't held while tp-ing, don't reverse binding
+        self.update_binds(dir_in, dir_out)
+        self.readjust_binds_after_tp(dir_in, dir_out)  # If the key wasn't held while tp-ing, don't reverse binding
 
         if self.is_scrolling_x and self.is_scrolling_y:
             if dir_in == cst.EAST:
@@ -589,7 +591,7 @@ class Room(cb.AbstractBase):
                 dir_angles.update({cst.NORTH: 180, cst.WEST: 90, cst.SOUTH: 0, cst.EAST: 270})
             elif dir_in == cst.WEST:
                 dir_angles.update({cst.WEST: 180, cst.SOUTH: 90, cst.EAST: 0, cst.NORTH: 270})
-            self._sprites_rotate_trajectory(dir_angles[dir_out])
+            self.sprites_rotate_trajectory(dir_angles[dir_out])
 
         elif self.is_scrolling_x and not self.is_scrolling_y:
             if dir_in == cst.SOUTH:
@@ -597,57 +599,57 @@ class Room(cb.AbstractBase):
                 if dir_out == dir_in:
                     self.player1.vel = self.player1.vel.rotate(dir_angles[dir_out])
                 if dir_out in [cst.EAST, cst.WEST]:
-                    self._translate_vel(dir_angles[dir_out])
+                    self.translate_vel(dir_angles[dir_out])
 
             if dir_in == cst.EAST:
                 dir_angles.update({cst.SOUTH: 90, cst.EAST: 180, cst.NORTH: 270, cst.WEST: 0})
                 if dir_out == dir_in:
-                    self._sprites_rotate_trajectory(dir_angles[dir_out])
+                    self.sprites_rotate_trajectory(dir_angles[dir_out])
                 if dir_out in [cst.SOUTH, cst.NORTH]:
-                    self._translate_vel(dir_angles[dir_out])
+                    self.translate_vel(dir_angles[dir_out])
 
             if dir_in == cst.NORTH:
                 dir_angles.update({cst.SOUTH: 0, cst.EAST: 90, cst.NORTH: 180, cst.WEST: 270})
                 if dir_out == dir_in:
                     self.player1.vel = self.player1.vel.rotate(dir_angles[dir_out])
                 if dir_out in [cst.EAST, cst.WEST]:
-                    self._translate_vel(dir_angles[dir_out])
+                    self.translate_vel(dir_angles[dir_out])
 
             if dir_in == cst.WEST:
                 dir_angles.update({cst.SOUTH: 270, cst.EAST: 0, cst.NORTH: 90, cst.WEST: 180})
                 if dir_out == dir_in:
-                    self._sprites_rotate_trajectory(dir_angles[dir_out])
+                    self.sprites_rotate_trajectory(dir_angles[dir_out])
                 if dir_out in [cst.SOUTH, cst.NORTH]:
-                    self._translate_vel(dir_angles[dir_out])
+                    self.translate_vel(dir_angles[dir_out])
 
         elif not self.is_scrolling_x and self.is_scrolling_y:
             if dir_in == cst.SOUTH:
                 dir_angles.update({cst.SOUTH: 180, cst.EAST: 270, cst.NORTH: 0, cst.WEST: 90})
                 if dir_out == dir_in:
-                    self._sprites_rotate_trajectory(dir_angles[dir_out])
+                    self.sprites_rotate_trajectory(dir_angles[dir_out])
                 if dir_out in [cst.EAST, cst.WEST]:
-                    self._translate_vel(dir_angles[dir_out])
+                    self.translate_vel(dir_angles[dir_out])
 
             if dir_in == cst.EAST:
                 dir_angles.update({cst.SOUTH: 90, cst.EAST: 180, cst.NORTH: 270, cst.WEST: 0})
                 if dir_out == dir_in:
                     self.player1.vel = self.player1.vel.rotate(dir_angles[dir_out])
                 if dir_out in [cst.SOUTH, cst.NORTH]:
-                    self._translate_vel(dir_angles[dir_out])
+                    self.translate_vel(dir_angles[dir_out])
 
             if dir_in == cst.NORTH:
                 dir_angles.update({cst.SOUTH: 0, cst.EAST: 90, cst.NORTH: 180, cst.WEST: 270})
                 if dir_out == dir_in:
-                    self._sprites_rotate_trajectory(dir_angles[dir_out])
+                    self.sprites_rotate_trajectory(dir_angles[dir_out])
                 if dir_out in [cst.EAST, cst.WEST]:
-                    self._translate_vel(dir_angles[dir_out])
+                    self.translate_vel(dir_angles[dir_out])
 
             if dir_in == cst.WEST:
                 dir_angles.update({cst.SOUTH: 270, cst.EAST: 0, cst.NORTH: 90, cst.WEST: 180})
                 if dir_out == dir_in:
                     self.player1.vel = self.player1.vel.rotate(dir_angles[dir_out])
                 if dir_out in [cst.SOUTH, cst.NORTH]:
-                    self._translate_vel(dir_angles[dir_out])
+                    self.translate_vel(dir_angles[dir_out])
 
         elif not self.is_scrolling_x and not self.is_scrolling_y:
             if dir_in == cst.EAST:
@@ -658,7 +660,7 @@ class Room(cb.AbstractBase):
                 dir_angles.update({cst.WEST: 180, cst.SOUTH: 90, cst.EAST: 0, cst.NORTH: 270})
             self.player1.vel = self.player1.vel.rotate(dir_angles[dir_out])
 
-    def _sprites_rotate_trajectory(self, angle: float) -> None:
+    def sprites_rotate_trajectory(self, angle: float) -> None:
         """Rotates the velocities and accelerations of all the sprites within the room's sprites
 
         :param angle: The angle to rotate the vectors by
@@ -669,7 +671,7 @@ class Room(cb.AbstractBase):
         for sprite in self._get_sprites_to_recenter():
             sprite.vel = sprite.vel.rotate(angle)
 
-    def _translate_vel(self, angle: float) -> None:
+    def translate_vel(self, angle: float) -> None:
         """Sets the room's velocity equal to the player's rotated velocity and vice versa
 
         :param angle: The angle to rotate the velocities by
@@ -813,8 +815,8 @@ class Room(cb.AbstractBase):
         #                                  player_vel_copy, room_vel_copy)
         self.vel = vec(0, 0)
 
-    def _get_room_change_trajectory(self, prev_room_scroll_x: bool, prev_room_scroll_y: bool, new_room_scroll_x: bool,
-                                    new_room_scroll_y: bool, player_vel: vec, room_vel: vec) -> None:
+    def get_room_change_trajectory(self, prev_room_scroll_x: bool, prev_room_scroll_y: bool, new_room_scroll_x: bool,
+                                   new_room_scroll_y: bool, player_vel: vec, room_vel: vec) -> None:
         """Transfers the velocity from the room to the player or vice versa when changing rooms
 
         :param prev_room_scroll_x: Did the previous room scroll along the x-axis?
@@ -889,36 +891,18 @@ class Room(cb.AbstractBase):
         """
         if self.room == vec(0, 0):
             return [
-                tiles.Wall(0, 0, 4, 41),
+                tiles.Wall(0, 0, 4, 41, 0, -1, True),
+                tiles.Wall(256, 256, 16, 16, 0, -1, True),
                 # tiles.CustomWall(cst.WINWIDTH // 2, cst.WINHEIGHT // 2,
                 #                  'xx\nxo', 64)
-                trinkets.Box(300, 300)
+                # trinkets.Box(300, 300)
             ]
-
-        elif self.room == vec(0, 1):
-            return [
-                tiles.Wall(320, 180, 16, 4),
-                tiles.Wall(320, 180, 4, 8),
-                # trinkets.Box(cst.WINWIDTH // 2, cst.WINHEIGHT // 2),
-                # enemies.Ambusher(cst.WINWIDTH // 2, cst.WINHEIGHT // 2)
-            ]
-
-        elif self.room == vec(0, 2):
-            return [
-                tiles.Wall(600, 400, 16, 4),
-            ]
-
-        elif self.room == vec(1, 0):
-            return [
-
-            ]
-
         else:
             raise RuntimeError(f'No room layout associated with room {self.room}.')
 
     @cb.check_update_state
     def update(self):
-        self._hard_reset_binds()
+        self.hard_reset_binds()
         self._change_room()
         self.movement()
 
