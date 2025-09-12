@@ -17,6 +17,7 @@ import gamestack as gs
 import rooms
 import visuals
 
+from menus.StartUpmenu import Header
 
 pygame.init()
 pygame.display.set_caption('Orbeeto')
@@ -45,6 +46,10 @@ def redraw_game_window() -> None:
 # ============================================================================ #
 main_room = rooms.Room(0, 0)
 gs.s_action.groups.append(main_room)
+
+#Start up menu
+header = Header("Welcome to Orbeeto", pos=(cst.WINWIDTH//2 - 270, 180))
+gs.s_startup.all_sprites.add(header)
 
 # Pause menu
 pause_menu = menus.PauseMenu()
