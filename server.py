@@ -48,7 +48,7 @@ class PlayerChannel(Channel):
     def Close(self):
         print(f"Player {self.id} disconnected.")
         self._server.remove_player(self)
-
+ #simple
 
 class OrbeetoServer(Server):
     channelClass = PlayerChannel
