@@ -54,7 +54,7 @@ class PlayerChannel(Channel):
             })
 
         self._server.remove_player(self)
-
+ #simple
 
 class OrbeetoServer(Server):
     channelClass = PlayerChannel
