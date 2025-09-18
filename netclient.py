@@ -164,3 +164,15 @@ class NetClient(ConnectionListener):
             "hit_w": hit_w,
             "hit_h": hit_h
         })
+
+    def Network_player_disconnected(self, data):
+        pid = data["id"]
+        print(f"Player {pid} has disconnected.")
+
+        # Remove from local state if present
+        if pid in self.players:
+            del self.players[pid]
+
+        from text.display_text import StatusMessage
+        StatusMessage( f"Player {pid} disconnected!", duration=4.0)
+

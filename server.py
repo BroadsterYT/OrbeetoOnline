@@ -47,6 +47,12 @@ class PlayerChannel(Channel):
 
     def Close(self):
         print(f"Player {self.id} disconnected.")
+
+        for client in self.s_server.players.values():
+            client.Send({"player" : "disconnected",
+                         "id" : self.id
+            })
+
         self._server.remove_player(self)
 
 

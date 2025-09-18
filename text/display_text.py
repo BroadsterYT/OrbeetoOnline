@@ -66,3 +66,29 @@ class IndicatorText(cb.ActorBase):
         self.movement()
         if calc.get_time_diff(self.start) > self.duration:
             self.kill()
+class StatusMessage(cb.ActorBase):
+    def __init__(self, message: str, duration: float = 3.0):
+        super().__init__(cst.LAYER['text'])
+        self.add_to_gamestate()
+        groups.all_font_chars.add(self)
+
+        self.start = time.time()
+        self.duration = duration
+
+        # Render the message
+        self.image = text.text_to_image(str(message), text.indicator_font)
+
+        # Position: top center of screen
+        screen_w, _ = screen.buffer_screen.get_size()
+        self.set_rects(
+            (screen_w - self.image.get_width()) // 2,  # center horizontally
+            30,  # fixed distance from top
+            self.image.get_width(),
+            self.image.get_height(),
+            self.image.get_width(),
+            self.image.get_height()
+        )
+
+    def update(self):
+        if calc.get_time_diff(self.start) > self.duration:
+            self.kill()
