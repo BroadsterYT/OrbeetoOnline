@@ -99,23 +99,6 @@ async def main(max_frame_rate) -> None:
             pause_menu.is_open = False
         pause_menu.update()
 
-        # ----- Opening and closing inventory menu ----- #
-        global inventory_release
-        if inventory_release == ctrl.key_released[ctrl.K_MENU] - 1 and not inventory_menu.is_open:
-            gs.gamestack.push(gs.s_inventory)
-            inventory_release = ctrl.key_released[ctrl.K_MENU]
-            inventory_menu.is_open = True
-
-        elif inventory_release == ctrl.key_released[ctrl.K_MENU] - 1 and inventory_menu.is_open and gs.s_inventory in gs.gamestack.stack:
-            gs.gamestack.pop()
-            inventory_release = ctrl.key_released[ctrl.K_MENU]
-            inventory_menu.is_open = False
-
-        elif inventory_menu.is_open and gs.s_inventory not in gs.gamestack.stack:
-            inventory_release = ctrl.key_released[ctrl.K_MENU]
-            inventory_menu.is_open = False
-        inventory_menu.update()
-
         # Draw framerate on screen
         try:
             text.draw_text(f'{pow(screen.dt, -1)}', 0, 0)

@@ -1,3 +1,5 @@
+import pickle
+
 from PodSixNet.Server import Server
 from PodSixNet.Channel import Channel
 
@@ -5,6 +7,7 @@ from server_rooms import ServerRoom
 import calc
 import copy
 import constants as cst
+import socket
 
 import pygame
 from pygame.math import Vector2 as vec
@@ -53,8 +56,12 @@ class PlayerChannel(Channel):
 class OrbeetoServer(Server):
     channelClass = PlayerChannel
 
-    def __init__(self, host="0.0.0.0", port=12345):
+    def __init__(self, host="localhost", port=12345):
         Server.__init__(self, localaddr=(host, port))
+        self.udp_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        self.udp_socket.bind((host, 54321))
+        self.udp_socket.setblocking(False)
+
         self.players = {}
         self.bullets = {}
         self.walls = {}
@@ -222,6 +229,34 @@ class OrbeetoServer(Server):
             client.Send(walls_state)
 
     def tick(self):
+        # UDP Sending/Receiving
+        try:
+            data, addr = self.udp_socket.recvfrom(1024)
+            dec_data = pickle.loads(data)
+
+            match dec_data["action"]:
+                case "udp_request":
+                    print(f"UDP request received from {addr}")
+
+                case "fire":
+                    self.spawn_bullet(
+                        owner=0,
+                        bullet_type=dec_data["bullet_type"],
+                        x=dec_data["x"],
+                        y=dec_data["y"],
+                        vel_x=dec_data["vel_x"],
+                        vel_y=dec_data["vel_y"],
+                        hit_w=dec_data["hit_w"],
+                        hit_h=dec_data["hit_h"],
+                    )
+
+                case _:
+                    pass
+
+        except BlockingIOError:
+            pass
+
+        # TCP Sending/Receiving
         for pid, ch in self.players.items():
             self._handle_player_teleport(pid, ch.state)
 
