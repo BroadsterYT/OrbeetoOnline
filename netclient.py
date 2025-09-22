@@ -1,5 +1,7 @@
 from PodSixNet.Connection import connection, ConnectionListener
 import constants as cst
+import pickle
+import socket
 import time
 
 from pygame.math import Vector2 as vec
@@ -14,8 +16,18 @@ class NetClient(ConnectionListener):
     def __init__(self, client_player, host="localhost", port=12345):
         self.Connect((host, port))
         print(f"Hooked to Player on {host} with port {port}")
-        self.my_id = None
 
+        self.server_address = (host, 54321)
+        self.udp_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        self.udp_socket.setblocking(False)
+
+        server_req = {
+            "action": "udp_request"
+        }
+        server_req_bin = pickle.dumps(server_req)
+        self.udp_socket.sendto(server_req_bin, self.server_address)
+
+        self.my_id = None
         self.client_player = client_player
 
         self.players = {}
@@ -131,6 +143,20 @@ class NetClient(ConnectionListener):
         self.walls = data["walls"]
 
     def Loop(self):
+        # UDP Send/Receive
+        try:
+            data, _ = self.udp_socket.recvfrom(1024)
+            data_dec = pickle.loads(data)
+
+            if data_dec["action"] == "udp_request":
+                msg = {
+                    "action": "udp_request"
+                }
+                self.udp_socket.sendto(pickle.dumps(msg), self.server_address)
+        except BlockingIOError:
+            pass
+
+        # TCP Send/Receive
         connection.Pump()
         self.Pump()
 
@@ -155,7 +181,17 @@ class NetClient(ConnectionListener):
         })
 
     def send_fire(self, bullet_type: str, x, y, vel_x, vel_y, hit_w: int, hit_h: int):
-        connection.Send({
+        # connection.Send({
+        #     "action": "fire",
+        #     "bullet_type": bullet_type,
+        #     "x": x,
+        #     "y": y,
+        #     "vel_x": vel_x,
+        #     "vel_y": vel_y,
+        #     "hit_w": hit_w,
+        #     "hit_h": hit_h
+        # })
+        fire = {
             "action": "fire",
             "bullet_type": bullet_type,
             "x": x,
@@ -164,4 +200,5 @@ class NetClient(ConnectionListener):
             "vel_y": vel_y,
             "hit_w": hit_w,
             "hit_h": hit_h
-        })
+        }
+        self.udp_socket.sendto(pickle.dumps(fire), self.server_address)
