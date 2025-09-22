@@ -181,16 +181,6 @@ class NetClient(ConnectionListener):
         })
 
     def send_fire(self, bullet_type: str, x, y, vel_x, vel_y, hit_w: int, hit_h: int):
-        # connection.Send({
-        #     "action": "fire",
-        #     "bullet_type": bullet_type,
-        #     "x": x,
-        #     "y": y,
-        #     "vel_x": vel_x,
-        #     "vel_y": vel_y,
-        #     "hit_w": hit_w,
-        #     "hit_h": hit_h
-        # })
         fire = {
             "action": "fire",
             "bullet_type": bullet_type,
