@@ -206,10 +206,6 @@ async def handle_events(events_to_handle) -> None:
 
         check_mouse_scroll(event)
 
-        # Startup State into Action state when ENTER key is pressed
-        if event.type == pygame.KEYDOWN and event.key == pygame.K_RETURN:
-            if gs.s_startup in gs.gamestack.stack:
-                gs.gamestack.pop()
 
         # Key input updating
         for key in ctrl.is_input_held.keys():
