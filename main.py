@@ -41,16 +41,31 @@ def redraw_game_window() -> None:
     screen.buffer_screen.fill((0, 255, 255))
 
 
+#Start up menu
+header = Header("Welcome to Orbeeto", pos=(cst.WINWIDTH//2 - 270, 180), color=(0,250,0))
+message = Header("press 'Enter' to continue", pos=(cst.WINWIDTH//2 - 130, 250), font_size=30, color=(250,0,0))
+gs.s_startup.all_sprites.add(header, message)
+
+waiting_for_enter = True
+while waiting_for_enter:
+    for event in pygame.event.get():
+        if event.type == QUIT:
+            pygame.quit()
+            sys.exit()
+
+        if event.type == pygame.KEYDOWN and event.key == pygame.K_RETURN:
+            gs.gamestack.pop()   # remove startup state
+            waiting_for_enter = False
+
+    # Draw startup screen
+
+    redraw_game_window()
+
 # ============================================================================ #
 #                         Initialization for Main Loop                         #
 # ============================================================================ #
 main_room = rooms.Room(0, 0)
 gs.s_action.groups.append(main_room)
-
-#Start up menu
-header = Header("Welcome to Orbeeto", pos=(cst.WINWIDTH//2 - 270, 180), color=(0,250,0))
-message = Header("press 'Enter' to continue", pos=(cst.WINWIDTH//2 - 130, 250), font_size=30, color=(250,0,0))
-gs.s_startup.all_sprites.add(header, message)
 
 # Pause menu
 pause_menu = menus.PauseMenu()
