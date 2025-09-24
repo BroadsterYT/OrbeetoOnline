@@ -46,6 +46,7 @@ header = Header("Welcome to Orbeeto", pos=(cst.WINWIDTH//2 - 270, 180), color=(0
 message = Header("press 'Enter' to continue", pos=(cst.WINWIDTH//2 - 130, 250), font_size=30, color=(250,0,0))
 gs.s_startup.all_sprites.add(header, message)
 
+"""
 waiting_for_enter = True
 while waiting_for_enter:
     for event in pygame.event.get():
@@ -73,6 +74,7 @@ pause_release = 0
 
 inventory_menu = menus.InventoryMenu(main_room.player1)
 inventory_release = 0
+"""
 
 prev_time = time.time()  # Used for delta time
 
@@ -103,6 +105,9 @@ async def main(max_frame_rate) -> None:
         screen.dt = now - prev_time
         prev_time = now
 
+
+
+        """
         # ----- Opening and closing pause menu ----- #
         global pause_release
         if pause_release == ctrl.key_released[ctrl.K_PAUSE] - 1 and not pause_menu.is_open:
@@ -136,7 +141,7 @@ async def main(max_frame_rate) -> None:
             inventory_release = ctrl.key_released[ctrl.K_MENU]
             inventory_menu.is_open = False
         inventory_menu.update()
-
+        """
         # Draw framerate on screen
         try:
             text.draw_text(f'{pow(screen.dt, -1)}', 0, 0)
@@ -206,6 +211,12 @@ async def handle_events(events_to_handle) -> None:
 
         check_mouse_scroll(event)
 
+        # Startup State into Action state when ENTER key is pressed
+        if event.type == pygame.KEYDOWN and event.key == pygame.K_RETURN:
+            if gs.s_startup in gs.gamestack.stack:
+                main_room = rooms.Room(0, 0)
+                gs.s_action.groups.append(main_room)
+                gs.gamestack.pop()
 
         # Key input updating
         for key in ctrl.is_input_held.keys():
