@@ -23,6 +23,7 @@ import text
 import timer
 
 from netclient import NetClient
+from menus.menuinputbars import arr
 
 
 class PlayerGun(cb.ActorBase):
@@ -94,7 +95,9 @@ class Player(cb.ActorBase):
         self.add_to_gamestate()
         groups.all_players.add(self)
         self.room = cb.get_room()
-        self.net = NetClient(self, "localhost", 12345)
+
+        self.IPAddress = self.IPAddressInput()
+        self.net = NetClient(self, self.IPAddress, 12345)
 
         # self.last_textbox_release = ctrl.key_released[ctrl.K_DIALOGUE]
 
@@ -191,6 +194,13 @@ class Player(cb.ActorBase):
             self._xp = 582803
         else:
             self._xp = value
+
+    #fetch input from the Address input box
+    def IPAddressInput(self):
+        for box in arr:
+            if (box.name == 'IPAddressInput'):
+                return box.get_text()
+        return None
 
     # ----------------------------------- Stats ---------------------------------- #
     def update_max_stats(self):

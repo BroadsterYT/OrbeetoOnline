@@ -16,7 +16,6 @@ import constants as cst
 import gamestack as gs
 import rooms
 import visuals
-from gamestack import s_join_game
 
 from menus.StartUpmenu import Header
 
@@ -47,51 +46,31 @@ def join_game_window() -> None:
     gs.gamestack.pop()
     gs.gamestack.pop()
 
-#Start up menu
-header = Header("Welcome to Orbeeto", pos=(cst.WINWIDTH//2 - 270, 180), color=(0,250,0))
-message = Header("press 'Esc' for settings", pos=(cst.WINWIDTH//2 - 130, 250), font_size=30, color=(250,0,0))
+# Start up menu
+header = Header("Welcome to Orbeeto", pos=(cst.WINWIDTH // 2 - 270, 180), color=(0, 250, 0))
+message = Header("press 'Esc' for settings", pos=(cst.WINWIDTH // 2 - 130, 250), font_size=30, color=(250, 0, 0))
 PlayGame_button = menus.MenuButton(gs.s_startup, cst.WINWIDTH // 2, 550, 286, 32, 'Play Game',
-                                           lambda: gs.gamestack.push(s_join_game))
-gs.s_startup.all_sprites.add(header, message, PlayGame_button)
+                                   lambda: gs.gamestack.push(gs.s_join_game))
+gs.s_startup.all_sprites.add(header, message)
 
-#join local or create game menu
+# join local or create game menu
 join_local_Game_button = menus.MenuButton(gs.s_join_game, cst.WINWIDTH // 2, 475, 506, 32, 'Join Local Game',
-                                           join_game_window)
+                                          join_game_window)
 create_local_Game_button = menus.MenuButton(gs.s_join_game, cst.WINWIDTH // 2, 400, 556, 32, 'Create Local Game',
-                                           join_game_window)
-gs.s_join_game.all_sprites.add(join_local_Game_button, create_local_Game_button)
+                                            join_game_window)
 
-"""
-waiting_for_enter = True
-while waiting_for_enter:
-    for event in pygame.event.get():
-        if event.type == QUIT:
-            pygame.quit()
-            sys.exit()
+input_box = menus.InputBox(gs.s_join_game, cst.WINWIDTH // 2 - 150, 300, 300, 50, 'IPAddressInput')
 
-        if event.type == pygame.KEYDOWN and event.key == pygame.K_RETURN:
-            gs.gamestack.pop()   # remove startup state
-            waiting_for_enter = False
-
-    # Draw startup screen
-
-    redraw_game_window()
-
-# ============================================================================ #
-#                         Initialization for Main Loop                         #
-# ============================================================================ #
-main_room = rooms.Room(0, 0)
-gs.s_action.groups.append(main_room)
-"""
 # Pause menu
 pause_menu = menus.PauseMenu()
 pause_release = 0
 
-#took out the inventory menu
-#inventory_menu = menus.InventoryMenu(main_room.player1)
-#inventory_release = 0
+# took out the inventory menu
+# inventory_menu = menus.InventoryMenu(main_room.player1)
+# inventory_release = 0
 
 prev_time = time.time()  # Used for delta time
+
 
 
 async def main(max_frame_rate) -> None:
@@ -223,6 +202,9 @@ async def handle_events(events_to_handle) -> None:
 
         if event.type == QUIT:
             sys.exit()
+
+        if gs.gamestack.stack[-1] == gs.s_join_game:
+            input_box.update(event)
 
         check_mouse_scroll(event)
 

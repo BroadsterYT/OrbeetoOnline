@@ -13,3 +13,4 @@ from .menuslots import *
 from .pausemenu import *
 from .scrollwidgets import *
 from .tooltips import *
+from .menuinputbars import *
