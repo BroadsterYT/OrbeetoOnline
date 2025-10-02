@@ -49,15 +49,19 @@ def join_game_window() -> None:
 # Start up menu
 header = Header("Welcome to Orbeeto", pos=(cst.WINWIDTH // 2 - 270, 180), color=(0, 250, 0))
 message = Header("press 'Esc' for settings", pos=(cst.WINWIDTH // 2 - 130, 250), font_size=30, color=(250, 0, 0))
-PlayGame_button = menus.MenuButton(gs.s_startup, cst.WINWIDTH // 2, 550, 286, 32, 'Play Game',
+PlayGame_button = menus.MenuButton(gs.s_startup, cst.WINWIDTH // 2, 450, 286, 32, 'Play Game',
                                    lambda: gs.gamestack.push(gs.s_join_game))
+end_game_button = menus.MenuButton(gs.s_startup, cst.WINWIDTH // 2, 550, 322, 32, 'Leave Game',
+                                            sys.exit)
 gs.s_startup.all_sprites.add(header, message)
 
 # join local or create game menu
-join_local_Game_button = menus.MenuButton(gs.s_join_game, cst.WINWIDTH // 2, 475, 506, 32, 'Join Local Game',
+join_local_Game_button = menus.MenuButton(gs.s_join_game, cst.WINWIDTH // 2, 475, 500, 32, 'Join Local Game',
                                           join_game_window)
-create_local_Game_button = menus.MenuButton(gs.s_join_game, cst.WINWIDTH // 2, 400, 556, 32, 'Create Local Game',
+create_local_Game_button = menus.MenuButton(gs.s_join_game, cst.WINWIDTH // 2, 400, 550, 32, 'Create Local Game',
                                             join_game_window)
+Join_game_back_button = menus.MenuButton(gs.s_join_game, cst.WINWIDTH // 2, 550, 200, 32, 'Back',
+                                         gs.gamestack.pop)
 
 input_box = menus.InputBox(gs.s_join_game, cst.WINWIDTH // 2 - 150, 300, 300, 50, 'IPAddressInput')
 
