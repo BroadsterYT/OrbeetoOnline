@@ -76,7 +76,6 @@ pause_release = 0
 prev_time = time.time()  # Used for delta time
 
 
-
 async def main(max_frame_rate) -> None:
     """The main loop of the program.
 
@@ -102,8 +101,6 @@ async def main(max_frame_rate) -> None:
         now = time.time()
         screen.dt = now - prev_time
         prev_time = now
-
-
 
         # ----- Opening and closing pause menu ----- #
         global pause_release
