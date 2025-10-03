@@ -23,6 +23,7 @@ import text
 import timer
 
 from netclient import NetClient
+from menus.menuinputbars import arr
 
 
 class PlayerGun(cb.ActorBase):
@@ -94,7 +95,9 @@ class Player(cb.ActorBase):
         self.add_to_gamestate()
         groups.all_players.add(self)
         self.room = cb.get_room()
-        self.net = NetClient(self, "localhost", 12345)
+
+        self.IPAddress = self.IPAddressInput()
+        self.net = NetClient(self, self.IPAddress, 12345)
 
         # self.last_textbox_release = ctrl.key_released[ctrl.K_DIALOGUE]
 
@@ -133,7 +136,7 @@ class Player(cb.ActorBase):
 
         self.bullet_vel = 10
         self.gun_cooldown = 0.15
-        self.last_shot_time = time.time()
+        self.last_shot_time = timer.g_timer.time
         self.last_hit = timer.g_timer.time
 
         self.grapple_speed = 2.0
@@ -191,6 +194,13 @@ class Player(cb.ActorBase):
             self._xp = 582803
         else:
             self._xp = value
+
+    #fetch input from the Address input box
+    def IPAddressInput(self):
+        for box in arr:
+            if (box.name == 'IPAddressInput'):
+                return box.get_text()
+        return None
 
     # ----------------------------------- Stats ---------------------------------- #
     def update_max_stats(self):
@@ -334,6 +344,7 @@ class Player(cb.ActorBase):
         angle = math.radians(calc.get_angle_to_mouse(self))
         self.gun_cooldown = max(self.gun_l.cooldown, self.gun_r.cooldown)
 
+        print(f"Input: {ctrl.is_input_held[1]} | Last shot: {calc.get_game_tdiff(self.last_shot_time)} | Gun cooldown: {self.gun_cooldown}")
         if ctrl.is_input_held[1] and calc.get_game_tdiff(self.last_shot_time) >= self.gun_cooldown:
             if calc.get_game_tdiff(self.last_gun_heat_inc) >= 0.1:
                 self.gun_heat += self.gun_heat_conduct
@@ -449,7 +460,6 @@ class Player(cb.ActorBase):
 
     @cb.check_update_state
     def update(self):
-        print(f"Player velocity: {self.room.vel.magnitude()}")
         self.movement()
 
         self._animate()

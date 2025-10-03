@@ -8,8 +8,8 @@ from pygame.math import Vector2 as vec
 
 import screen
 
-PING_INTERVAL = 2
-PING_TIMEOUT = 5
+PING_INTERVAL = 0.5
+PING_TIMEOUT = 1
 
 
 class NetClient(ConnectionListener):

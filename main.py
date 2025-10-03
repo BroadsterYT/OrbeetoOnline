@@ -17,6 +17,7 @@ import gamestack as gs
 import rooms
 import visuals
 
+from menus.StartUpmenu import Header
 
 pygame.init()
 pygame.display.set_caption('Orbeeto')
@@ -39,19 +40,38 @@ def redraw_game_window() -> None:
 
     screen.buffer_screen.fill((0, 255, 255))
 
+def join_game_window() -> None:
+    main_room = rooms.Room(0, 0)
+    gs.s_action.groups.append(main_room)
+    gs.gamestack.pop()
+    gs.gamestack.pop()
 
-# ============================================================================ #
-#                         Initialization for Main Loop                         #
-# ============================================================================ #
-main_room = rooms.Room(0, 0)
-gs.s_action.groups.append(main_room)
+# Start up menu
+header = Header("Welcome to Orbeeto", pos=(cst.WINWIDTH // 2 - 270, 180), color=(0, 250, 0))
+message = Header("press 'Esc' for settings", pos=(cst.WINWIDTH // 2 - 130, 250), font_size=30, color=(250, 0, 0))
+PlayGame_button = menus.MenuButton(gs.s_startup, cst.WINWIDTH // 2, 450, 286, 32, 'Play Game',
+                                   lambda: gs.gamestack.push(gs.s_join_game))
+end_game_button = menus.MenuButton(gs.s_startup, cst.WINWIDTH // 2, 550, 322, 32, 'Leave Game',
+                                            sys.exit)
+gs.s_startup.all_sprites.add(header, message)
+
+# join local or create game menu
+join_local_Game_button = menus.MenuButton(gs.s_join_game, cst.WINWIDTH // 2, 475, 500, 32, 'Join Local Game',
+                                          join_game_window)
+create_local_Game_button = menus.MenuButton(gs.s_join_game, cst.WINWIDTH // 2, 400, 550, 32, 'Create Local Game',
+                                            join_game_window)
+Join_game_back_button = menus.MenuButton(gs.s_join_game, cst.WINWIDTH // 2, 550, 200, 32, 'Back',
+                                         gs.gamestack.pop)
+
+input_box = menus.InputBox(gs.s_join_game, cst.WINWIDTH // 2 - 150, 300, 300, 50, 'IPAddressInput')
 
 # Pause menu
 pause_menu = menus.PauseMenu()
 pause_release = 0
 
-inventory_menu = menus.InventoryMenu(main_room.player1)
-inventory_release = 0
+# took out the inventory menu
+# inventory_menu = menus.InventoryMenu(main_room.player1)
+# inventory_release = 0
 
 prev_time = time.time()  # Used for delta time
 
@@ -99,6 +119,24 @@ async def main(max_frame_rate) -> None:
             pause_menu.is_open = False
         pause_menu.update()
 
+        # ----- Opening and closing inventory menu ----- #
+        """
+        global inventory_release
+        if inventory_release == ctrl.key_released[ctrl.K_MENU] - 1 and not inventory_menu.is_open:
+            gs.gamestack.push(gs.s_inventory)
+            inventory_release = ctrl.key_released[ctrl.K_MENU]
+            inventory_menu.is_open = True
+
+        elif inventory_release == ctrl.key_released[ctrl.K_MENU] - 1 and inventory_menu.is_open and gs.s_inventory in gs.gamestack.stack:
+            gs.gamestack.pop()
+            inventory_release = ctrl.key_released[ctrl.K_MENU]
+            inventory_menu.is_open = False
+
+        elif inventory_menu.is_open and gs.s_inventory not in gs.gamestack.stack:
+            inventory_release = ctrl.key_released[ctrl.K_MENU]
+            inventory_menu.is_open = False
+        inventory_menu.update()
+        """
         # Draw framerate on screen
         try:
             text.draw_text(f'{pow(screen.dt, -1)}', 0, 0)
@@ -165,6 +203,9 @@ async def handle_events(events_to_handle) -> None:
 
         if event.type == QUIT:
             sys.exit()
+
+        if gs.gamestack.stack[-1] == gs.s_join_game:
+            input_box.update(event)
 
         check_mouse_scroll(event)
 

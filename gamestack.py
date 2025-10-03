@@ -63,12 +63,14 @@ s_action = GameState('action', 0,  timer.g_timer.update_current_time)
 s_pause = GameState('pause', 2, timer.g_timer.update_elapsed_time)
 s_settings = GameState('settings', 3, timer.g_timer.update_elapsed_time)
 s_inventory = GameState('inventory', 1, timer.g_timer.update_elapsed_time)
+s_startup = GameState('startup', 0, timer.g_timer.update_elapsed_time)
+s_join_game = GameState('join_game', 1, timer.g_timer.update_elapsed_time)
 
 
 class GameStack:
     def __init__(self):
         self.stack = [
-            s_action
+            s_action, s_startup
         ]
 
     def push(self, gamestate: GameState) -> None:
