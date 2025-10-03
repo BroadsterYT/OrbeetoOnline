@@ -40,11 +40,13 @@ def redraw_game_window() -> None:
 
     screen.buffer_screen.fill((0, 255, 255))
 
+
 def join_game_window() -> None:
     main_room = rooms.Room(0, 0)
     gs.s_action.groups.append(main_room)
     gs.gamestack.pop()
     gs.gamestack.pop()
+
 
 # Start up menu
 header = Header("Welcome to Orbeeto", pos=(cst.WINWIDTH // 2 - 270, 180), color=(0, 250, 0))
