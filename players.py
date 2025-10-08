@@ -22,7 +22,7 @@ import statbars
 import text
 import timer
 
-from netclient import NetClient
+from orbeetoclient import OrbeetoClient
 from menus.menuinputbars import arr
 
 
@@ -97,7 +97,7 @@ class Player(cb.ActorBase):
         self.room = cb.get_room()
 
         self.ip_address = self.get_ip_input()
-        self.net = NetClient(self, self.ip_address, 12345)
+        self.net = OrbeetoClient(self, self.ip_address, 12345)
 
         # self.last_textbox_release = ctrl.key_released[ctrl.K_DIALOGUE]
 
@@ -195,7 +195,8 @@ class Player(cb.ActorBase):
         else:
             self._xp = value
 
-    def get_ip_input(self):
+    @staticmethod
+    def get_ip_input():
         """fetch input from the Address input box
 
         :return:
@@ -493,7 +494,7 @@ class Player(cb.ActorBase):
             self.pos.y - self.room.pos.y,
             angle
         )
-        self.net.Loop()
+        self.net.loop()
 
         self.realizer.realize_walls()
         self.realizer.realize_players()

@@ -14,3 +14,4 @@ pylint==3.3.8
 setuptools==68.2.0
 tomlkit==0.13.3
 wheel==0.41.2
+msgpack==1.1.2
