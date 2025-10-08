@@ -56,10 +56,10 @@ class PlayerChannel(Channel):
 class OrbeetoServer(Server):
     channelClass = PlayerChannel
 
-    def __init__(self, host="localhost", port=12345):
+    def __init__(self, host="0.0.0.0", port=12345):
         Server.__init__(self, localaddr=(host, port))
         self.udp_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        self.udp_socket.bind((host, 54321))
+        self.udp_socket.bind((host, port))
         self.udp_socket.setblocking(False)
 
         self.players = {}
@@ -164,8 +164,6 @@ class OrbeetoServer(Server):
         found = []
         for pid, portal in [tup for tup in self.portals.items() if tup[1]["owner"] == owner]:
             found.append(pid)
-
-        print(len(found))
 
         if len(found) > 2:
             pid_to_del = min(found)

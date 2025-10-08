@@ -96,8 +96,8 @@ class Player(cb.ActorBase):
         groups.all_players.add(self)
         self.room = cb.get_room()
 
-        self.IPAddress = self.IPAddressInput()
-        self.net = NetClient(self, self.IPAddress, 12345)
+        self.ip_address = self.get_ip_input()
+        self.net = NetClient(self, self.ip_address, 12345)
 
         # self.last_textbox_release = ctrl.key_released[ctrl.K_DIALOGUE]
 
@@ -195,12 +195,15 @@ class Player(cb.ActorBase):
         else:
             self._xp = value
 
-    #fetch input from the Address input box
-    def IPAddressInput(self):
+    def get_ip_input(self):
+        """fetch input from the Address input box
+
+        :return:
+        """
         for box in arr:
-            if (box.name == 'IPAddressInput'):
+            if box.name == 'IPAddressInput':
                 return box.get_text()
-        return None
+        return ""
 
     # ----------------------------------- Stats ---------------------------------- #
     def update_max_stats(self):
@@ -344,7 +347,6 @@ class Player(cb.ActorBase):
         angle = math.radians(calc.get_angle_to_mouse(self))
         self.gun_cooldown = max(self.gun_l.cooldown, self.gun_r.cooldown)
 
-        print(f"Input: {ctrl.is_input_held[1]} | Last shot: {calc.get_game_tdiff(self.last_shot_time)} | Gun cooldown: {self.gun_cooldown}")
         if ctrl.is_input_held[1] and calc.get_game_tdiff(self.last_shot_time) >= self.gun_cooldown:
             if calc.get_game_tdiff(self.last_gun_heat_inc) >= 0.1:
                 self.gun_heat += self.gun_heat_conduct
