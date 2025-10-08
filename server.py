@@ -13,6 +13,9 @@ import pygame
 from pygame.math import Vector2 as vec
 
 
+BROADCAST_ADDR = ("255.255.255.255", 54321)
+
+
 class PlayerChannel(Channel):
     def __init__(self, *args, **kwargs):
         Channel.__init__(self, *args, **kwargs)
@@ -63,6 +66,7 @@ class OrbeetoServer(Server):
         Server.__init__(self, localaddr=(host, port))
         self.udp_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.udp_socket.bind((host, port))
+        self.udp_socket.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
         self.udp_socket.setblocking(False)
 
         self.players = {}
@@ -223,9 +227,11 @@ class OrbeetoServer(Server):
             }
         }
 
+        bullet_bin = pickle.dumps(bullets_state)
+        self.udp_socket.sendto(bullet_bin, BROADCAST_ADDR)
+
         for client in self.players.values():
             client.Send(players_state)
-            client.Send(bullets_state)
             client.Send(portals_state)
             client.Send(walls_state)
 

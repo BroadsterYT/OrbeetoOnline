@@ -8,8 +8,8 @@ from pygame.math import Vector2 as vec
 
 import screen
 
-PING_INTERVAL = 0.5
-PING_TIMEOUT = 1
+PING_INTERVAL = 1
+PING_TIMEOUT = 5
 
 
 class NetClient(ConnectionListener):
@@ -156,6 +156,9 @@ class NetClient(ConnectionListener):
                     # }
                     # self.udp_socket.sendto(pickle.dumps(msg), self.server_address)
                     pass
+                case "update_bullets":
+                    print("got new bullets")
+                    self.bullets = data_dec["bullets"]
 
                 case _:
                     pass
