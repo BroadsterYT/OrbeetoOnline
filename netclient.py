@@ -149,11 +149,17 @@ class NetClient(ConnectionListener):
             data, _ = self.udp_socket.recvfrom(1024)
             data_dec = pickle.loads(data)
 
-            if data_dec["action"] == "udp_request":
-                msg = {
-                    "action": "udp_request"
-                }
-                self.udp_socket.sendto(pickle.dumps(msg), self.server_address)
+            match data_dec["action"]:
+                case "udp_request":
+                    # msg = {
+                    #     "action": "udp_request"
+                    # }
+                    # self.udp_socket.sendto(pickle.dumps(msg), self.server_address)
+                    pass
+
+                case _:
+                    pass
+
         except BlockingIOError:
             pass
 
@@ -174,11 +180,12 @@ class NetClient(ConnectionListener):
         pass
 
     # ----- Orbeeto Hooks ----- #
-    def send_move(self, x, y):
+    def send_move(self, x, y, angle):
         connection.Send({
             "action": "move",
             "x": x,
             "y": y,
+            "angle": angle
         })
 
     def send_fire(self, bullet_type: str, x, y, vel_x, vel_y, hit_w: int, hit_h: int):

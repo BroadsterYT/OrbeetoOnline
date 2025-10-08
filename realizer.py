@@ -68,7 +68,7 @@ class ServerRealizer:
                     self.local_players[pid].pos = vec(player["x"] + self.room.pos.x, player["y"] + self.room.pos.y)
             else:
                 self.local_players[pid].pos = vec(player["x"] + self.room.pos.x, player["y"] + self.room.pos.y)
-                self.local_players[pid].render_images()
+                self.local_players[pid].rotate_image(player["angle"])
                 self.local_players[pid].center_rects()
 
     def realize_bullets(self):

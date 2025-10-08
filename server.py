@@ -20,6 +20,7 @@ class PlayerChannel(Channel):
         self.state = {
             "x": 0,
             "y": 0,
+            "angle": 0,
             "vel_x": 0,
             "vel_y": 0,
             "hp": 50,
@@ -34,6 +35,7 @@ class PlayerChannel(Channel):
         if self.state["hp"] > 0:
             self.state["x"] = data["x"]
             self.state["y"] = data["y"]
+            self.state["angle"] = data["angle"]
 
     def Network_fire(self, data):
         bullet_id = self._server.spawn_bullet(
@@ -57,6 +59,7 @@ class OrbeetoServer(Server):
     channelClass = PlayerChannel
 
     def __init__(self, host="0.0.0.0", port=12345):
+        # Server IP MUST BE 0.0.0.0! localhost and 127.0.0.1 are not sufficient
         Server.__init__(self, localaddr=(host, port))
         self.udp_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.udp_socket.bind((host, port))

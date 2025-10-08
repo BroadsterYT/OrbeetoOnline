@@ -465,7 +465,8 @@ class Player(cb.ActorBase):
         self.movement()
 
         self._animate()
-        self.rotate_image(calc.get_angle_to_mouse(self))
+        angle = calc.get_angle_to_mouse(self)
+        self.rotate_image(angle)
 
         # Heat damage
         if self.gun_heat > self.heat_thresh:
@@ -490,6 +491,7 @@ class Player(cb.ActorBase):
         self.net.send_move(
             self.pos.x - self.room.pos.x,
             self.pos.y - self.room.pos.y,
+            angle
         )
         self.net.Loop()
 
