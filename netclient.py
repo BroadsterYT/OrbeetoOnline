@@ -17,8 +17,9 @@ class NetClient(ConnectionListener):
         self.Connect((host, port))
         print(f"Hooked to Player on {host} with port {port}")
 
-        self.server_address = (host, 54321)
+        self.server_address = (host, port)
         self.udp_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        self.udp_socket.bind((host, 54321))
         self.udp_socket.setblocking(False)
 
         server_req = {
