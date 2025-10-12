@@ -20,7 +20,7 @@ class OrbeetoClient:
         self.udp_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.udp_socket.setblocking(False)
 
-        self.send_connection_request()
+        self._send_connection_request()
 
         self.players = {}
         self.bullets = {}
@@ -30,14 +30,22 @@ class OrbeetoClient:
         self.last_ping = 0.0
         self.last_pong = time.time()
 
-    def send_connection_request(self) -> None:
+    def _send_data_to_server(self, data: dict) -> None:
+        """Sends data (a dictionary) to the server through the UDP socket
+
+        :param data: The data to send to the server
+        :return: None
+        """
+        packed_data = msgpack.packb(data, use_bin_type=True)
+        self.udp_socket.sendto(packed_data, self.server_address)
+
+    def _send_connection_request(self) -> None:
         """Sends a request to the server to acknowledge this client's existence
 
         :return: None
         """
         server_req = {"action": "connection_request"}
-        packed = msgpack.packb(server_req, use_bin_type=True)
-        self.udp_socket.sendto(packed, self.server_address)
+        self._send_data_to_server(server_req)
         print(f"Connection request sent to {self.server_address}")
 
     def send_ping(self) -> None:
@@ -45,9 +53,8 @@ class OrbeetoClient:
 
         :return: None
         """
-        ping = {"action": "ping"}
-        packed = msgpack.packb(ping, use_bin_type=True)
-        self.udp_socket.sendto(packed, self.server_address)
+        ping = {"action": "player_ping"}
+        self._send_data_to_server(ping)
 
     def send_move(self, x: float, y: float, angle: float) -> None:
         """Sends the information about the player's location to the server
@@ -57,7 +64,13 @@ class OrbeetoClient:
         :param angle: The directional angle the player is facing
         :return: None
         """
-        pass
+        move = {
+            "action": "player_move",
+            "x": x,
+            "y": y,
+            "angle": angle
+        }
+        self._send_data_to_server(move)
 
     def send_fire(self, bullet_type: str, x: float, y: float, vel_x: float, vel_y: float, hit_w: int, hit_h: int) -> None:
         """Sends a request to create a bullet on the server with the given data
@@ -71,47 +84,66 @@ class OrbeetoClient:
         :param hit_h: The height the bullet's hitbox should have
         :return: None
         """
-        pass
+        fire = {
+            "action": "player_fire",
+            "bullet_type": bullet_type,
+            "x": x,
+            "y": y,
+            "vel_x": vel_x,
+            "vel_y": vel_y,
+            "hit_w": hit_w,
+            "hit_h": hit_h
+        }
+
+        self._send_data_to_server(fire)
 
     def loop(self) -> None:
         """Performs the main client loop
 
         :return:
         """
-
         unpacked_data = {"action": "null"}
         try:
             data, addr = self.udp_socket.recvfrom(4096)
             unpacked_data = msgpack.unpackb(data, raw=False)
         except BlockingIOError:
             pass
-        except Exception as e:
-            print(f"Error receiving packet: {e}")
-            return
 
         match unpacked_data["action"]:
             case "server_acknowledgement":
                 print(f"Acknowledged by server. Enjoy!")
-            case "pong":
+            case "server_pong":
+                self.last_pong = time.time()
                 print("Pong received")
+
+            case "bullet_spawn":
+                print(f"Spawned bullet {unpacked_data['id']}")
+                self.bullets[unpacked_data["id"]] = unpacked_data["bullet"]
+            case "update_bullets":
+                for bid, delta in unpacked_data["deltas"].items(): # noqa
+                    try:
+                        self.bullets[int(bid)]["x"] = delta["x"]
+                        self.bullets[int(bid)]["y"] = delta["y"]
+                    except KeyError:
+                        pass
+            case "destroy_bullet":
+                del self.bullets[unpacked_data["id"]]
+
+            case "update_portals":
+                self.portals = unpacked_data["portals"]
+
+            case "update_walls":
+                self.walls = unpacked_data["walls"]
             case _:
                 pass
 
-    #     self.my_id = None
-    #     self.client_player = client_player
-    #
-    #     self.players = {}
-    #     self.bullets = {}
-    #     self.portals = {}
-    #     self.walls = {}
-    #
-    #     self.last_ping = 0
-    #     self.last_pong = time.time()
-    #
-    # def Network_init(self, data):
-    #     self.my_id = data["id"]
-    #     print(f"Connected as Player {self.my_id}")
-    #
+        if time.time() - self.last_ping > PING_INTERVAL:
+            self.send_ping()
+            self.last_ping = time.time()
+
+        if time.time() - self.last_pong > PING_TIMEOUT:
+            exit()
+
     # def Network_pong(self, data):
     #     # print("Pong received")
     #     self.last_pong = time.time()
