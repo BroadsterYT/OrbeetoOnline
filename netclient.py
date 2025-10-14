@@ -19,7 +19,6 @@ class NetClient(ConnectionListener):
 
         self.server_address = (host, port)
         self.udp_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        self.udp_socket.bind((host, 54321))
         self.udp_socket.setblocking(False)
 
         server_req = {
