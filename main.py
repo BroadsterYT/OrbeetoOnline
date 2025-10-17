@@ -3,8 +3,6 @@ import asyncio
 import os
 import sys
 import time
-import subprocess
-import atexit
 
 import pygame
 from pygame.locals import QUIT
@@ -82,7 +80,7 @@ gs.s_startup.all_sprites.add(header, message)
 join_local_Game_button = menus.MenuButton(gs.s_join_game, cst.WINWIDTH // 2, 475, 500, 32, 'Join Local Game',
                                           lambda: gs.gamestack.push(gs.s_join_local_game))
 create_local_Game_button = menus.MenuButton(gs.s_join_game, cst.WINWIDTH // 2, 400, 550, 32, 'Create Local Game',
-                                            lambda: server.start() )
+                                            server.start)
 Join_game_back_button = menus.MenuButton(gs.s_join_game, cst.WINWIDTH // 2, 550, 130, 32, 'Back',
                                          gs.gamestack.pop)
 
