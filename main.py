@@ -3,6 +3,7 @@ import asyncio
 import os
 import sys
 import time
+import subprocess
 
 import pygame
 from pygame.locals import QUIT
@@ -48,6 +49,11 @@ def join_game_window() -> None:
     gs.gamestack.pop()
     gs.gamestack.pop()
 
+def start_server() -> None:
+    """Starts the game server
+    Returns:
+    """
+    subprocess.Popen([sys.executable, "server.py"])
 
 # Start up menu
 header = Header("Welcome to Orbeeto", pos=(cst.WINWIDTH // 2 - 270, 180), color=(0, 250, 0))
@@ -62,7 +68,7 @@ gs.s_startup.all_sprites.add(header, message)
 join_local_Game_button = menus.MenuButton(gs.s_join_game, cst.WINWIDTH // 2, 475, 500, 32, 'Join Local Game',
                                           lambda: gs.gamestack.push(gs.s_join_local_game))
 create_local_Game_button = menus.MenuButton(gs.s_join_game, cst.WINWIDTH // 2, 400, 550, 32, 'Create Local Game',
-                                            join_game_window)
+                                            lambda: start_server() )
 Join_game_back_button = menus.MenuButton(gs.s_join_game, cst.WINWIDTH // 2, 550, 130, 32, 'Back',
                                          gs.gamestack.pop)
 
@@ -216,7 +222,7 @@ async def handle_events(events_to_handle) -> None:
         if event.type == QUIT:
             sys.exit()
 
-        if gs.gamestack.stack[-1] == gs.s_join_game:
+        if gs.gamestack.stack[-1] == gs.s_join_local_game:
             input_box.update(event)
 
         check_mouse_scroll(event)
