@@ -4,6 +4,7 @@ import os
 import sys
 import time
 import subprocess
+import atexit
 
 import pygame
 from pygame.locals import QUIT
@@ -19,6 +20,7 @@ import rooms
 import visuals
 
 from menus.StartUpmenu import Header
+from servermanager import ServerManager
 
 pygame.init()
 pygame.display.set_caption('Orbeeto')
@@ -49,11 +51,23 @@ def join_game_window() -> None:
     gs.gamestack.pop()
     gs.gamestack.pop()
 
+"""
 def start_server() -> None:
-    """Starts the game server
-    Returns:
-    """
-    subprocess.Popen([sys.executable, "server.py"])
+
+    server_proc = subprocess.Popen([sys.executable, "server.py"])
+    print("Server started")
+
+def stop_server() -> None:
+    
+    print("Shutting down server...")
+    server_proc.terminate()
+
+server_proc = None
+print(server_proc)
+atexit.register(stop_server)
+"""
+
+server = ServerManager()
 
 # Start up menu
 header = Header("Welcome to Orbeeto", pos=(cst.WINWIDTH // 2 - 270, 180), color=(0, 250, 0))
@@ -68,7 +82,7 @@ gs.s_startup.all_sprites.add(header, message)
 join_local_Game_button = menus.MenuButton(gs.s_join_game, cst.WINWIDTH // 2, 475, 500, 32, 'Join Local Game',
                                           lambda: gs.gamestack.push(gs.s_join_local_game))
 create_local_Game_button = menus.MenuButton(gs.s_join_game, cst.WINWIDTH // 2, 400, 550, 32, 'Create Local Game',
-                                            lambda: start_server() )
+                                            lambda: server.start() )
 Join_game_back_button = menus.MenuButton(gs.s_join_game, cst.WINWIDTH // 2, 550, 130, 32, 'Back',
                                          gs.gamestack.pop)
 
