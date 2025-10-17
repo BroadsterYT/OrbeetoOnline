@@ -46,6 +46,7 @@ def join_game_window() -> None:
     gs.s_action.groups.append(main_room)
     gs.gamestack.pop()
     gs.gamestack.pop()
+    gs.gamestack.pop()
 
 
 # Start up menu
@@ -59,13 +60,22 @@ gs.s_startup.all_sprites.add(header, message)
 
 # join local or create game menu
 join_local_Game_button = menus.MenuButton(gs.s_join_game, cst.WINWIDTH // 2, 475, 500, 32, 'Join Local Game',
-                                          join_game_window)
+                                          lambda: gs.gamestack.push(gs.s_join_local_game))
 create_local_Game_button = menus.MenuButton(gs.s_join_game, cst.WINWIDTH // 2, 400, 550, 32, 'Create Local Game',
                                             join_game_window)
-Join_game_back_button = menus.MenuButton(gs.s_join_game, cst.WINWIDTH // 2, 550, 200, 32, 'Back',
+Join_game_back_button = menus.MenuButton(gs.s_join_game, cst.WINWIDTH // 2, 550, 130, 32, 'Back',
                                          gs.gamestack.pop)
 
-input_box = menus.InputBox(gs.s_join_game, cst.WINWIDTH // 2 - 150, 300, 300, 50, 'IPAddressInput')
+
+#join local game
+join_game_header = Header("Join locally hosted Game", pos=(cst.WINWIDTH // 2 - 130, 250), font_size=30, color=(250, 0, 0))
+input_box = menus.InputBox(gs.s_join_local_game, cst.WINWIDTH // 2 - 150, 300, 300, 50, 'IPAddressInput')
+join_game_button = menus.MenuButton(gs.s_join_local_game, cst.WINWIDTH // 2, 400, 130, 32, 'Join',
+                                            join_game_window)
+join_local_game_back_button = menus.MenuButton(gs.s_join_local_game, cst.WINWIDTH // 2, 550, 130, 32, 'Back',
+                                         gs.gamestack.pop)
+
+gs.s_join_local_game.all_sprites.add(join_game_header)
 
 # Pause menu
 pause_menu = menus.PauseMenu()
