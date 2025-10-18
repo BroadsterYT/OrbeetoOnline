@@ -59,6 +59,7 @@ class OrbeetoServer(Server):
     def __init__(self, host="0.0.0.0", port=12345):
         Server.__init__(self, localaddr=(host, port))
         self.udp_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        self.udp_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         self.udp_socket.bind((host, port))
         self.udp_socket.setblocking(False)
 

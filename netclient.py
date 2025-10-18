@@ -9,14 +9,12 @@ from pygame.math import Vector2 as vec
 import screen
 
 PING_INTERVAL = 0.5
-PING_TIMEOUT = 1
+#changed this from 1 to 3
+PING_TIMEOUT = 3
 
 
 class NetClient(ConnectionListener):
     def __init__(self, client_player, host="localhost", port=12345):
-        self.Connect((host, port))
-        print(f"Hooked to Player on {host} with port {port}")
-
         self.server_address = (host, port)
         self.udp_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.udp_socket.setblocking(False)
@@ -38,6 +36,9 @@ class NetClient(ConnectionListener):
         self.last_ping = 0
         self.last_pong = time.time()
 
+        self.Connect((host, port))
+        print(f"Hooked to Player on {host} with port {port}")
+
     def Network_init(self, data):
         self.my_id = data["id"]
         print(f"Connected as Player {self.my_id}")
@@ -47,8 +48,9 @@ class NetClient(ConnectionListener):
         self.last_pong = time.time()
 
     def Network_update_players(self, data):
-        self.players = data["players"]
-        self.client_player.hp = self.players[self.my_id]["hp"]
+        if self.my_id is not None:
+            self.players = data["players"]
+            self.client_player.hp = self.players[self.my_id]["hp"]
 
     def Network_update_bullets(self, data):
         self.bullets = data["bullets"]
@@ -166,7 +168,8 @@ class NetClient(ConnectionListener):
             # print("Ping sent.")
 
         if now - self.last_pong > PING_TIMEOUT:
-            exit(0)
+            print("Ping timeout")
+            #exit(0)
 
     def Network(self, data):
         # print("Unhandled message: ", data)
@@ -192,3 +195,16 @@ class NetClient(ConnectionListener):
             "hit_h": hit_h
         }
         self.udp_socket.sendto(pickle.dumps(fire), self.server_address)
+
+    def cleanup (self):
+        try:
+            self.udp_socket.close()
+        except Exception:
+            print(Exception)
+            pass
+        try:
+            connection.Close()
+        except Exception:
+            print(Exception)
+            pass
+        print("Network client cleaned up.")

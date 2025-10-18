@@ -97,6 +97,8 @@ class Player(cb.ActorBase):
         self.room = cb.get_room()
 
         self.ip_address = self.get_ip_input()
+        #testing
+        self.ip_address = "localhost"
         self.net = NetClient(self, self.ip_address, 12345)
 
         # self.last_textbox_release = ctrl.key_released[ctrl.K_DIALOGUE]

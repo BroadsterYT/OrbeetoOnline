@@ -9,15 +9,14 @@ import classbases as cb
 import constants as cst
 import gamestack as gs
 from gamestack import s_action, s_startup
-from servermanager import ServerManager
-
+from servermanager import servermanager
 
 class PauseMenu(cb.AbstractBase):
     def __init__(self):
         """The pause menu"""
         super().__init__()
         self.is_open = False
-        self.servermanager = ServerManager()
+        self.servermanager = servermanager
 
         # ---------- Settings ---------- #
         self.b_settings = menus.MenuButton(gs.s_pause, cst.WINWIDTH // 2, 500, 256, 32, 'Settings',
@@ -43,9 +42,11 @@ class PauseMenu(cb.AbstractBase):
 
     def leavegame(self):
         """leave current game"""
+        self.servermanager.stop()
+
         gs.gamestack.pop()
         gs.gamestack.push(s_startup)
-        self.servermanager.stop()
+
 
     def exitapplication(self):
         """exit application"""

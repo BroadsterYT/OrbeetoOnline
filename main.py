@@ -18,7 +18,7 @@ import rooms
 import visuals
 
 from menus.StartUpmenu import Header
-from servermanager import ServerManager
+from servermanager import servermanager
 
 pygame.init()
 pygame.display.set_caption('Orbeeto')
@@ -41,31 +41,42 @@ def redraw_game_window() -> None:
 
     screen.buffer_screen.fill((0, 255, 255))
 
+def cleanup_room(room):
+    """Fully remove a Room and all its sprites from the game."""
+    # Remove all sprites in the room from all groups
+    if hasattr(room, "all_sprites"):
+        for sprite in list(room.all_sprites):  # make a copy to safely iterate
+            # Remove sprite from all groups
+            for group in sprite.groups():
+                group.remove(sprite)
+            # Cleanup network client if present
+            if hasattr(sprite, "net") and sprite.net is not None:
+                sprite.net.cleanup()
+                del sprite.net
+            # Delete the sprite reference
+            del sprite
+
+    # Finally, delete the room itself
+    del room
+
+
 
 def join_game_window() -> None:
+    global join_count
+    global main_room
+    if join_count == True:
+        """This should remove everything that is being created
+         as sprites when initializing main_room so that it can be redefined"""
+        cleanup_room(main_room)
+        gs.s_action.groups.clear()
     main_room = rooms.Room(0, 0)
     gs.s_action.groups.append(main_room)
+    join_count = True
     gs.gamestack.pop()
     gs.gamestack.pop()
     gs.gamestack.pop()
 
-"""
-def start_server() -> None:
-
-    server_proc = subprocess.Popen([sys.executable, "server.py"])
-    print("Server started")
-
-def stop_server() -> None:
-    
-    print("Shutting down server...")
-    server_proc.terminate()
-
-server_proc = None
-print(server_proc)
-atexit.register(stop_server)
-"""
-
-server = ServerManager()
+main_room = None
 
 # Start up menu
 header = Header("Welcome to Orbeeto", pos=(cst.WINWIDTH // 2 - 270, 180), color=(0, 250, 0))
@@ -80,7 +91,7 @@ gs.s_startup.all_sprites.add(header, message)
 join_local_Game_button = menus.MenuButton(gs.s_join_game, cst.WINWIDTH // 2, 475, 500, 32, 'Join Local Game',
                                           lambda: gs.gamestack.push(gs.s_join_local_game))
 create_local_Game_button = menus.MenuButton(gs.s_join_game, cst.WINWIDTH // 2, 400, 550, 32, 'Create Local Game',
-                                            server.start)
+                                            servermanager.start)
 Join_game_back_button = menus.MenuButton(gs.s_join_game, cst.WINWIDTH // 2, 550, 130, 32, 'Back',
                                          gs.gamestack.pop)
 
@@ -88,8 +99,9 @@ Join_game_back_button = menus.MenuButton(gs.s_join_game, cst.WINWIDTH // 2, 550,
 #join local game
 join_game_header = Header("Join locally hosted Game", pos=(cst.WINWIDTH // 2 - 130, 250), font_size=30, color=(250, 0, 0))
 input_box = menus.InputBox(gs.s_join_local_game, cst.WINWIDTH // 2 - 150, 300, 300, 50, 'IPAddressInput')
+join_count = False
 join_game_button = menus.MenuButton(gs.s_join_local_game, cst.WINWIDTH // 2, 400, 130, 32, 'Join',
-                                            join_game_window)
+                                                join_game_window)
 join_local_game_back_button = menus.MenuButton(gs.s_join_local_game, cst.WINWIDTH // 2, 550, 130, 32, 'Back',
                                          gs.gamestack.pop)
 
