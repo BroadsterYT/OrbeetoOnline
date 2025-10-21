@@ -97,7 +97,10 @@ class StatBarTest(cb.ActorBase):
 
     def _animate(self):
         self.image.fill((0, 0, 1))
-        hp_bar = pygame.Surface(vec((self.owner.hp / self.owner.max_hp) * 128, 16))
+
+        hp_width = max(1, int((self.owner.hp/ self.owner.max_hp)*128))
+
+        hp_bar = pygame.Surface(vec(hp_width, 16))
         hp_bar.fill((255, 0, 0))
         self.image.blit(hp_bar, (0, 0))
 

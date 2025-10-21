@@ -174,6 +174,8 @@ class NetClient(ConnectionListener):
 
     # ----- Orbeeto Hooks ----- #
     def send_move(self, x, y):
+
+
         connection.Send({
             "action": "move",
             "x": x,

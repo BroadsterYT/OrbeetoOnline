@@ -41,6 +41,7 @@ class PlayerGun(cb.ActorBase):
         self.bullet_vel = 10
         self.cooldown = 0.15
 
+
         self.set_gun()
         self.set_rects(0, 0, 64, 64, 64, 64)
 
@@ -140,6 +141,7 @@ class Player(cb.ActorBase):
         self.last_hit = timer.g_timer.time
 
         self.grapple_speed = 2.0
+        self.is_spectator = False
 
         # --------------------------------- Stat Bars -------------------------------- #
         # self.health_bar = statbars.StatBar(self, 0, 'hp', 'max_hp', 'sprites/stat_bars/health_bar.png')
@@ -484,13 +486,19 @@ class Player(cb.ActorBase):
         else:
             self._passive_hp_regen()
 
-        if self.hp <= 0:
-            self.kill()
+        if self.hp <= 0 and not self.is_spectator:
+            self.enter_spectator_mode()
 
-        self.net.send_move(
+            #self.kill()
+
+        if (self.is_spectator):
+            pass
+        else:
+            self.net.send_move(
             self.pos.x - self.room.pos.x,
             self.pos.y - self.room.pos.y,
-        )
+            )
+
         self.net.Loop()
 
         self.realizer.realize_walls()
@@ -503,6 +511,22 @@ class Player(cb.ActorBase):
 
     def __repr__(self):
         return f'Player({self.pos}, {self.vel}, {self.accel})'
+
+    def enter_spectator_mode(self):
+        self.is_spectator = True
+        self.hp = 0
+        print("enetered spectator mode")
+
+        # for when brody merges disconnection messages ->
+        # group.all_font_chars.add(
+        #   text.IndicatorText(self.pos.x, self.pos.y - 32, "You died! Now spectating..."
+        # )
+
+        self.net.send_move(0, 0)
+
+
+
+
 
 
 if __name__ == '__main__':
