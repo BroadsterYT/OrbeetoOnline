@@ -24,7 +24,8 @@ class PlayerChannel(Channel):
             "vel_y": 0,
             "hp": 50,
             "hit_w": 32,
-            "hit_h": 32
+            "hit_h": 32,
+            "is_alive": True
         }
 
     def Network_ping(self, data):
@@ -195,7 +196,7 @@ class OrbeetoServer(Server):
             "action": "update_players",
             "players": {
                 pid: ch.state
-                for pid, ch in self.players.items()
+                for pid, ch in [p for p in self.players.items() if p[1]["is_alive"]]
             },
         }
         bullets_state = {
@@ -257,6 +258,10 @@ class OrbeetoServer(Server):
         # TCP Sending/Receiving
         for pid, ch in self.players.items():
             self._handle_player_teleport(pid, ch.state)
+            if ch.state["hp"] <= 0:
+                ch.state["is_alive"] = False
+                print(f"Player {pid} has died.")
+                self._broadcast_player_death(pid)
 
         to_destroy = []  # Bullets to destroy after iteration
         for bid, b in self.bullets.items():
@@ -285,6 +290,13 @@ class OrbeetoServer(Server):
             portal["y"] = portal["landed_on"]["y"] + portal["offset_y"]
 
         self.broadcast()
+
+    def _broadcast_player_death(self, pid):
+        for pid, player in [p for p in self.players.values() if p.id == pid]:
+            death = {
+                "action": "player_death",
+                "id": pid
+            }
 
     def _handle_player_teleport(self, player_id, player):
         player_hitbox = pygame.Rect(

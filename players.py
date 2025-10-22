@@ -41,7 +41,6 @@ class PlayerGun(cb.ActorBase):
         self.bullet_vel = 10
         self.cooldown = 0.15
 
-
         self.set_gun()
         self.set_rects(0, 0, 64, 64, 64, 64)
 
@@ -513,6 +512,7 @@ class Player(cb.ActorBase):
         return f'Player({self.pos}, {self.vel}, {self.accel})'
 
     def enter_spectator_mode(self):
+        self.net.send_move(-64, -64)
         self.is_spectator = True
         self.hp = 0
         print("enetered spectator mode")
@@ -521,13 +521,6 @@ class Player(cb.ActorBase):
         # group.all_font_chars.add(
         #   text.IndicatorText(self.pos.x, self.pos.y - 32, "You died! Now spectating..."
         # )
-
-        self.net.send_move(0, 0)
-
-
-
-
-
 
 if __name__ == '__main__':
     import timeit

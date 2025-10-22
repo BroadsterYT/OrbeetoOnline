@@ -48,7 +48,14 @@ class NetClient(ConnectionListener):
 
     def Network_update_players(self, data):
         self.players = data["players"]
+        print(self.players)
+
         self.client_player.hp = self.players[self.my_id]["hp"]
+
+    def Network_player_death(self, data):
+        pid = data["id"]
+        if pid in self.players:
+            del self.players[pid]
 
     def Network_update_bullets(self, data):
         self.bullets = data["bullets"]
