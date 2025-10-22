@@ -291,12 +291,24 @@ class OrbeetoServer(Server):
 
         self.broadcast()
 
-    def _broadcast_player_death(self, pid):
-        for pid, player in [p for p in self.players.values() if p.id == pid]:
+    def _broadcast_player_death(self, target_id):
+        # Find the player who died
+        dead_pid, dead_player = next(
+            ((pid, player) for pid, player in self.players.items() if player.id == target_id),
+            (None, None)
+        )
+
+
+        if dead_pid is not None:
             death = {
                 "action": "player_death",
-                "id": pid
+                "id": dead_pid
             }
+
+            for pid, client in self.players.items():
+                if pid != dead_pid:
+                    #print(f"Dead: {dead_pid}, Sending to: {pid}")
+                    client.Send(death)
 
     def _handle_player_teleport(self, player_id, player):
         player_hitbox = pygame.Rect(
