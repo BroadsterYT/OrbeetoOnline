@@ -196,7 +196,7 @@ class OrbeetoServer(Server):
             "action": "update_players",
             "players": {
                 pid: ch.state
-                for pid, ch in [p for p in self.players.items() if p[1]["is_alive"]]
+                for pid, ch in [p for p in self.players.items() if p[1].state["is_alive"]]
             },
         }
         bullets_state = {
