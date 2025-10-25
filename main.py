@@ -19,6 +19,8 @@ import visuals
 
 from menus.StartUpmenu import Header
 from servermanager import servermanager
+from ClosingScreen import close_screen
+import atexit
 
 pygame.init()
 pygame.display.set_caption('Orbeeto')
@@ -69,13 +71,17 @@ Join_game_back_button = menus.MenuButton(gs.s_join_game, cst.WINWIDTH // 2, 550,
 #join local game
 join_game_header = Header("Join locally hosted Game", pos=(cst.WINWIDTH // 2 - 130, 250), font_size=30, color=(250, 0, 0))
 input_box = menus.InputBox(gs.s_join_local_game, cst.WINWIDTH // 2 - 150, 300, 300, 50, 'IPAddressInput')
-join_count = False
 join_game_button = menus.MenuButton(gs.s_join_local_game, cst.WINWIDTH // 2, 400, 130, 32, 'Join',
                                                 join_game_window)
 join_local_game_back_button = menus.MenuButton(gs.s_join_local_game, cst.WINWIDTH // 2, 550, 130, 32, 'Back',
                                          gs.gamestack.pop)
 
 gs.s_join_local_game.all_sprites.add(join_game_header)
+
+#Closing game window
+closing_game_header = Header("Orbeeto is closing...", pos=(cst.WINWIDTH // 2 - 130, 250), font_size=60, color=(250, 0, 0))
+gs.s_close_game.all_sprites.add(closing_game_header)
+#atexit.register(close_screen.changeCloseFlag())
 
 # Pause menu
 pause_menu = menus.PauseMenu()
@@ -101,6 +107,11 @@ async def main(max_frame_rate) -> None:
     running = True
     while running:
         # print(ctrl.is_input_held[4], ctrl.is_input_held[5])
+
+        if close_screen.close_time is not None:
+            if close_screen.close_time <= time.time():
+                sys.exit()
+
         if sec_per_frame:
             # Framerate limiter
             delay = next_frame_target - time.time()
