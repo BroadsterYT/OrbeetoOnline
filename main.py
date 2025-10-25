@@ -79,7 +79,7 @@ join_local_game_back_button = menus.MenuButton(gs.s_join_local_game, cst.WINWIDT
 gs.s_join_local_game.all_sprites.add(join_game_header)
 
 #Closing game window
-closing_game_header = Header("Orbeeto is closing...", pos=(cst.WINWIDTH // 2 - 130, 250), font_size=60, color=(250, 0, 0))
+closing_game_header = Header("Orbeeto is closing...", pos=(cst.WINWIDTH // 2 - 170, 330), font_size=50, color=(250, 0, 0))
 gs.s_close_game.all_sprites.add(closing_game_header)
 #atexit.register(close_screen.changeCloseFlag())
 
@@ -221,28 +221,28 @@ async def handle_events(events_to_handle) -> None:
     :param events_to_handle: The list of pygame events to handle
     :return: None
     """
-    for event in events_to_handle:
-        key_pressed = pygame.key.get_pressed()
+    if close_screen.close_time is None:
+        for event in events_to_handle:
+            key_pressed = pygame.key.get_pressed()
 
-        if event.type == QUIT:
-            sys.exit()
+            if event.type == QUIT:
+                sys.exit()
 
-        if gs.gamestack.stack[-1] == gs.s_join_local_game:
-            input_box.update(event)
+            if gs.gamestack.stack[-1] == gs.s_join_local_game:
+                input_box.update(event)
 
-        check_mouse_scroll(event)
+            check_mouse_scroll(event)
 
-        # Key input updating
-        for key in ctrl.is_input_held.keys():
-            if key in [1, 2, 3]:
-                ctrl.is_input_held[key] = pygame.mouse.get_pressed(5)[key - 1]
-            else:
-                ctrl.is_input_held[key] = key_pressed[key]
+            # Key input updating
+            for key in ctrl.is_input_held.keys():
+                if key in [1, 2, 3]:
+                    ctrl.is_input_held[key] = pygame.mouse.get_pressed(5)[key - 1]
+                else:
+                    ctrl.is_input_held[key] = key_pressed[key]
 
-        # Key release updating
-        check_key_release(event, False)
-        check_key_release(event, True)
-
+            # Key release updating
+            check_key_release(event, False)
+            check_key_release(event, True)
 
 if __name__ == '__main__':
     asyncio.run(main(cst.FPS))
