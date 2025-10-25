@@ -7,7 +7,8 @@ class ServerManager:
 
     def start(self):
         if not self.proc:
-            self.proc = subprocess.Popen([sys.executable, "server.py"])
+            pythonw = sys.executable.replace("python.exe", "pythonw.exe")
+            self.proc = subprocess.Popen([pythonw, "server.py"], creationflags=subprocess.CREATE_NO_WINDOW)
             print("Server started")
 
     def stop(self):

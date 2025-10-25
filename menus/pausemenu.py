@@ -36,6 +36,7 @@ class PauseMenu(cb.AbstractBase):
     def leave(self):
         gs.gamestack.push(s_close_game)
         close_screen.changeCloseFlag()
+        print("player Quit the Game!")
         # TODO: Add settings menu page
 
     def update(self):
