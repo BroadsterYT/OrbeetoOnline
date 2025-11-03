@@ -49,9 +49,9 @@ def join_game_window() -> None:
     gs.gamestack.pop()
 
 # Start up menu
-header = Header("Welcome to Orbeeto", pos=(cst.WINWIDTH // 2 - 270, 180), color=(0, 250, 0))
-message = Header("press 'Esc' for settings", pos=(cst.WINWIDTH // 2 - 130, 250), font_size=30, color=(250, 0, 0))
-PlayGame_button = menus.MenuButton(gs.s_startup, cst.WINWIDTH // 2, 450, 286, 32, 'Play Game',
+header = Header("Welcome to Orbeeto!", pos=(cst.WINWIDTH // 2 - 260, 180), color=(0, 130, 0))
+message = Header("press 'Esc' for settings", pos=(cst.WINWIDTH // 2 - 120, 250), font_size=30, color=(250, 0, 0))
+PlayGame_button = menus.MenuButton(gs.s_startup, cst.WINWIDTH // 2, 475, 286, 32, 'Play Game',
                                    lambda: gs.gamestack.push(gs.s_join_game))
 end_game_button = menus.MenuButton(gs.s_startup, cst.WINWIDTH // 2, 550, 322, 32, 'Leave Game',
                                             sys.exit)
@@ -82,6 +82,9 @@ quit_return_button = menus.MenuButton(gs.s_confirm_quit, cst.WINWIDTH // 2, cst.
                                                  gs.gamestack.replace, gs.s_confirm_quit, gs.s_pause)
 
 confirm_quit_button = menus.MenuButton(gs.s_confirm_quit, cst.WINWIDTH // 2, cst.WINHEIGHT // (5/4), 126, 32, 'Quit', sys.exit)
+quit_game_header = Header("Are you sure you want to leave?", pos=(cst.WINWIDTH // 2 - 310, 250), font_size=60, color=(250, 0, 0))
+
+gs.s_confirm_quit.all_sprites.add(quit_game_header)
 
 # Pause menu
 pause_menu = menus.PauseMenu()
