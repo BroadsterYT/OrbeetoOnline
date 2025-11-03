@@ -88,6 +88,10 @@ quit_game_header = Header("Are you sure you want to leave?", pos=(cst.WINWIDTH /
 gs.s_confirm_quit.all_sprites.add(quit_game_header)
 
 # server settings submenue
+def start_server():
+    servermanager.start()
+    gs.gamestack.pop()
+
 server_settings_header = Header("Server settings", pos=(cst.WINWIDTH // 2 - 165, 100), font_size=60, color=(250, 0, 0))
 
 server_settings_1_header = Header("Game duration (in min):", pos=(cst.WINWIDTH // 2 - 165, 280), font_size=30, color=(0, 0, 100))
@@ -100,7 +104,7 @@ server_settings_3_header = Header("Something:", pos=(cst.WINWIDTH // 2 - 165, 44
 server_settings_3_input_box = menus.InputBox(gs.s_server_settings, cst.WINWIDTH // 2 - 150, 460, 300, 50, 'Server-Settings-3')
 
 start_server = menus.MenuButton(gs.s_server_settings, cst.WINWIDTH // 2, 575, 380, 32, 'Start Server',
-                                            servermanager.start)
+                                            start_server)
 server_settings_return_button = menus.MenuButton(gs.s_server_settings, cst.WINWIDTH // 2, 630, 200, 32, 'Return',
                                             gs.gamestack.pop)
 gs.s_server_settings.all_sprites.add(server_settings_header, server_settings_1_header, server_settings_2_header, server_settings_3_header)
