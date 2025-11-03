@@ -7,6 +7,20 @@ arr = []
 
 class InputBox(cb.ActorBase):
     def __init__(self, gamestate: gs.GameState, x, y, width, height, name= "", initial_text=""):
+        """
+        when creating an object of this class you need to make sure you call its update method on the event handler and
+        pass the event with it (look at other implementations).
+        In order to get access to the text of an input you can traverse through the global array that this file shares
+        and look for the specific input box you want by looking for it's name that is defined at its creation.
+
+        :param gamestate:
+        :param x:
+        :param y:
+        :param width:
+        :param height:
+        :param name:
+        :param initial_text:
+        """
         super().__init__(cst.LAYER['ui_2'], gamestate)
         self.add_to_gamestate()
 

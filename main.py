@@ -16,6 +16,7 @@ import constants as cst
 import gamestack as gs
 import rooms
 import visuals
+from gamestack import s_server_settings
 
 from menus.StartUpmenu import Header
 from servermanager import servermanager
@@ -61,7 +62,7 @@ gs.s_startup.all_sprites.add(header, message)
 join_local_Game_button = menus.MenuButton(gs.s_join_game, cst.WINWIDTH // 2, 475, 500, 32, 'Join Local Game',
                                           lambda: gs.gamestack.push(gs.s_join_local_game))
 create_local_Game_button = menus.MenuButton(gs.s_join_game, cst.WINWIDTH // 2, 400, 550, 32, 'Create Local Game',
-                                            servermanager.start)
+                                            gs.gamestack.push, s_server_settings)
 Join_game_back_button = menus.MenuButton(gs.s_join_game, cst.WINWIDTH // 2, 550, 130, 32, 'Back',
                                          gs.gamestack.pop)
 
@@ -86,6 +87,23 @@ quit_game_header = Header("Are you sure you want to leave?", pos=(cst.WINWIDTH /
 
 gs.s_confirm_quit.all_sprites.add(quit_game_header)
 
+# server settings submenue
+server_settings_header = Header("Server settings", pos=(cst.WINWIDTH // 2 - 165, 100), font_size=60, color=(250, 0, 0))
+
+server_settings_1_header = Header("Game duration (in min):", pos=(cst.WINWIDTH // 2 - 165, 280), font_size=30, color=(0, 0, 100))
+server_settings_1_input_box = menus.InputBox(gs.s_server_settings, cst.WINWIDTH // 2 - 150, 300, 300, 50, 'Server-Settings-1')
+
+server_settings_2_header = Header("Max num of players:", pos=(cst.WINWIDTH // 2 - 165, 360), font_size=30, color=(0, 0, 100))
+server_settings_2_input_box = menus.InputBox(gs.s_server_settings, cst.WINWIDTH // 2 - 150, 380, 300, 50, 'Server-Settings-2')
+
+server_settings_3_header = Header("Something:", pos=(cst.WINWIDTH // 2 - 165, 440), font_size=30, color=(0, 0, 100))
+server_settings_3_input_box = menus.InputBox(gs.s_server_settings, cst.WINWIDTH // 2 - 150, 460, 300, 50, 'Server-Settings-3')
+
+start_server = menus.MenuButton(gs.s_server_settings, cst.WINWIDTH // 2, 575, 380, 32, 'Start Server',
+                                            servermanager.start)
+server_settings_return_button = menus.MenuButton(gs.s_server_settings, cst.WINWIDTH // 2, 630, 200, 32, 'Return',
+                                            gs.gamestack.pop)
+gs.s_server_settings.all_sprites.add(server_settings_header, server_settings_1_header, server_settings_2_header, server_settings_3_header)
 # Pause menu
 pause_menu = menus.PauseMenu()
 pause_release = 0
@@ -229,6 +247,11 @@ async def handle_events(events_to_handle) -> None:
 
         if gs.gamestack.stack[-1] == gs.s_join_local_game:
             input_box.update(event)
+
+        if gs.gamestack.stack[-1] == gs.s_server_settings:
+            server_settings_1_input_box.update(event)
+            server_settings_2_input_box.update(event)
+            server_settings_3_input_box.update(event)
 
         check_mouse_scroll(event)
 
