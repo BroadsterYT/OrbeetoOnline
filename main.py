@@ -19,8 +19,6 @@ import visuals
 
 from menus.StartUpmenu import Header
 from servermanager import servermanager
-from ClosingScreen import close_screen
-import atexit
 
 pygame.init()
 pygame.display.set_caption('Orbeeto')
@@ -78,10 +76,12 @@ join_local_game_back_button = menus.MenuButton(gs.s_join_local_game, cst.WINWIDT
 
 gs.s_join_local_game.all_sprites.add(join_game_header)
 
-#Closing game window
-closing_game_header = Header("Orbeeto is closing...", pos=(cst.WINWIDTH // 2 - 170, 330), font_size=50, color=(250, 0, 0))
-gs.s_close_game.all_sprites.add(closing_game_header)
-#atexit.register(close_screen.changeCloseFlag())
+
+#leaving the game confirmation window
+quit_return_button = menus.MenuButton(gs.s_confirm_quit, cst.WINWIDTH // 2, cst.WINHEIGHT // (11/8), 190, 32, 'Return',
+                                                 gs.gamestack.replace, gs.s_confirm_quit, gs.s_pause)
+
+confirm_quit_button = menus.MenuButton(gs.s_confirm_quit, cst.WINWIDTH // 2, cst.WINHEIGHT // (5/4), 126, 32, 'Quit', sys.exit)
 
 # Pause menu
 pause_menu = menus.PauseMenu()
@@ -107,10 +107,6 @@ async def main(max_frame_rate) -> None:
     running = True
     while running:
         # print(ctrl.is_input_held[4], ctrl.is_input_held[5])
-
-        if close_screen.close_time is not None:
-            if close_screen.close_time <= time.time():
-                sys.exit()
 
         if sec_per_frame:
             # Framerate limiter
@@ -221,28 +217,28 @@ async def handle_events(events_to_handle) -> None:
     :param events_to_handle: The list of pygame events to handle
     :return: None
     """
-    if close_screen.close_time is None:
-        for event in events_to_handle:
-            key_pressed = pygame.key.get_pressed()
 
-            if event.type == QUIT:
-                sys.exit()
+    for event in events_to_handle:
+        key_pressed = pygame.key.get_pressed()
 
-            if gs.gamestack.stack[-1] == gs.s_join_local_game:
-                input_box.update(event)
+        if event.type == QUIT:
+            sys.exit()
 
-            check_mouse_scroll(event)
+        if gs.gamestack.stack[-1] == gs.s_join_local_game:
+            input_box.update(event)
 
-            # Key input updating
-            for key in ctrl.is_input_held.keys():
-                if key in [1, 2, 3]:
-                    ctrl.is_input_held[key] = pygame.mouse.get_pressed(5)[key - 1]
-                else:
-                    ctrl.is_input_held[key] = key_pressed[key]
+        check_mouse_scroll(event)
 
-            # Key release updating
-            check_key_release(event, False)
-            check_key_release(event, True)
+        # Key input updating
+        for key in ctrl.is_input_held.keys():
+            if key in [1, 2, 3]:
+                ctrl.is_input_held[key] = pygame.mouse.get_pressed(5)[key - 1]
+            else:
+                ctrl.is_input_held[key] = key_pressed[key]
+
+        # Key release updating
+        check_key_release(event, False)
+        check_key_release(event, True)
 
 if __name__ == '__main__':
     asyncio.run(main(cst.FPS))
