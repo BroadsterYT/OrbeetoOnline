@@ -187,6 +187,10 @@ async def main(max_frame_rate) -> None:
         except ZeroDivisionError:
             pass
 
+        #player name label
+        if gs.gamestack.stack[-1] == gs.s_action:
+            text.draw_text("Player1", cst.WINWIDTH // 2 - 24, cst.WINHEIGHT //2 - 65, 18)
+
         # ---------- Mouse Inputs ---------- #
         if ctrl.is_input_held[1] and ctrl.release_check:
             ctrl.last_click_pos = [pygame.mouse.get_pos(), gs.gamestack.stack[-1]]
