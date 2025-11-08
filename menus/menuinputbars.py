@@ -6,7 +6,7 @@ import gamestack as gs
 arr = []
 
 class InputBox(cb.ActorBase):
-    def __init__(self, gamestate: gs.GameState, x, y, width, height, name= "", initial_text=""):
+    def __init__(self, gamestate: gs.GameState, x, y, width, height, name= "", character_limit= 20, initial_text=""):
         """
         when creating an object of this class you need to make sure you call its update method on the event handler and
         pass the event with it (look at other implementations).
@@ -34,6 +34,8 @@ class InputBox(cb.ActorBase):
         self.border_color = self.color_inactive
         self.text_color = pygame.Color('black')
         self.active = False
+        self.character_limit = character_limit
+        self.character_limit_flag = False
 
         # start with a white box
         self.image = pygame.Surface((width, height))
@@ -58,9 +60,20 @@ class InputBox(cb.ActorBase):
                 print(f"Input confirmed: {self.text}")
                 self.text = ""
             elif event.key == pygame.K_BACKSPACE:
-                self.text = self.text[:-1]
+                if self.character_limit_flag == True:
+                    self.text = self.text[9:]
+                    self.character_limit_flag = False
+                else:
+                    self.text = self.text[:-1]
             else:
-                self.text += event.unicode
+                if len(self.text) < self.character_limit:
+                    self.text += event.unicode
+                else:
+                    if not self.character_limit_flag:
+                        print("Error: limited character amount reached")
+                        self.text = "Char num!" + self.text
+                    self.character_limit_flag = True
+
 
     def update(self, event=None):
         if event:
