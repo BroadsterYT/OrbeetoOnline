@@ -61,7 +61,7 @@ class InputBox(cb.ActorBase):
                 self.text = ""
             elif event.key == pygame.K_BACKSPACE:
                 if self.character_limit_flag == True:
-                    self.text = self.text[9:]
+                    self.text = self.text[20:]
                     self.character_limit_flag = False
                 else:
                     self.text = self.text[:-1]
@@ -71,7 +71,7 @@ class InputBox(cb.ActorBase):
                 else:
                     if not self.character_limit_flag:
                         print("Error: limited character amount reached")
-                        self.text = "Char num!" + self.text
+                        self.text = "too many characters!" + self.text
                     self.character_limit_flag = True
 
 
