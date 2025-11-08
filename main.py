@@ -20,6 +20,7 @@ from gamestack import s_server_settings
 
 from menus.StartUpmenu import Header
 from servermanager import servermanager
+from menus.menuinputbars import arr
 
 pygame.init()
 pygame.display.set_caption('Orbeeto')
@@ -68,14 +69,17 @@ Join_game_back_button = menus.MenuButton(gs.s_join_game, cst.WINWIDTH // 2, 550,
 
 
 #join local game
-join_game_header = Header("Join locally hosted Game", pos=(cst.WINWIDTH // 2 - 130, 250), font_size=30, color=(250, 0, 0))
-input_box = menus.InputBox(gs.s_join_local_game, cst.WINWIDTH // 2 - 150, 300, 300, 50, 'IPAddressInput')
-join_game_button = menus.MenuButton(gs.s_join_local_game, cst.WINWIDTH // 2, 400, 130, 32, 'Join',
+join_game_header = Header("Join locally hosted Game", pos=(cst.WINWIDTH // 2 - 230, 200), font_size=55, color=(250, 0, 0))
+IPAddress_header = Header("Host IP Address:", pos=(cst.WINWIDTH // 2 - 150, 300), font_size=30, color=(0, 0, 100))
+input_box_IP = menus.InputBox(gs.s_join_local_game, cst.WINWIDTH // 2 - 150, 320, 300, 35, 'IPAddressInput')
+Username_header = Header("Username:", pos=(cst.WINWIDTH // 2 - 150, 380), font_size=30, color=(0, 0, 100))
+input_box_username = menus.InputBox(gs.s_join_local_game, cst.WINWIDTH // 2 - 150, 400, 300, 35, 'UsernameInput')
+join_game_button = menus.MenuButton(gs.s_join_local_game, cst.WINWIDTH // 2, 500, 130, 32, 'Join',
                                                 join_game_window)
 join_local_game_back_button = menus.MenuButton(gs.s_join_local_game, cst.WINWIDTH // 2, 550, 130, 32, 'Back',
                                          gs.gamestack.pop)
 
-gs.s_join_local_game.all_sprites.add(join_game_header)
+gs.s_join_local_game.all_sprites.add(join_game_header, IPAddress_header, Username_header)
 
 
 #leaving the game confirmation window
@@ -92,16 +96,16 @@ def start_server():
     servermanager.start()
     gs.gamestack.pop()
 
-server_settings_header = Header("Server settings", pos=(cst.WINWIDTH // 2 - 165, 100), font_size=60, color=(250, 0, 0))
+server_settings_header = Header("Server settings", pos=(cst.WINWIDTH // 2 - 145, 150), font_size=55, color=(250, 0, 0))
 
 server_settings_1_header = Header("Game duration (in min):", pos=(cst.WINWIDTH // 2 - 165, 280), font_size=30, color=(0, 0, 100))
-server_settings_1_input_box = menus.InputBox(gs.s_server_settings, cst.WINWIDTH // 2 - 150, 300, 300, 50, 'Server-Settings-1')
+server_settings_1_input_box = menus.InputBox(gs.s_server_settings, cst.WINWIDTH // 2 - 150, 300, 300, 35, 'Server-Settings-1')
 
 server_settings_2_header = Header("Max num of players:", pos=(cst.WINWIDTH // 2 - 165, 360), font_size=30, color=(0, 0, 100))
-server_settings_2_input_box = menus.InputBox(gs.s_server_settings, cst.WINWIDTH // 2 - 150, 380, 300, 50, 'Server-Settings-2')
+server_settings_2_input_box = menus.InputBox(gs.s_server_settings, cst.WINWIDTH // 2 - 150, 380, 300, 35, 'Server-Settings-2')
 
 server_settings_3_header = Header("Something:", pos=(cst.WINWIDTH // 2 - 165, 440), font_size=30, color=(0, 0, 100))
-server_settings_3_input_box = menus.InputBox(gs.s_server_settings, cst.WINWIDTH // 2 - 150, 460, 300, 50, 'Server-Settings-3')
+server_settings_3_input_box = menus.InputBox(gs.s_server_settings, cst.WINWIDTH // 2 - 150, 460, 300, 35, 'Server-Settings-3')
 
 start_server = menus.MenuButton(gs.s_server_settings, cst.WINWIDTH // 2, 575, 380, 32, 'Start Server',
                                             start_server)
@@ -189,7 +193,10 @@ async def main(max_frame_rate) -> None:
 
         #player name label
         if gs.gamestack.stack[-1] == gs.s_action:
-            text.draw_text("Player1", cst.WINWIDTH // 2 - 24, cst.WINHEIGHT //2 - 65, 18)
+            for box in arr:
+                if box.name == 'UsernameInput':
+                    username = box.get_text()
+                    text.draw_text(username, cst.WINWIDTH // 2 - 24, cst.WINHEIGHT //2 - 65, 18)
 
 
         # ---------- Mouse Inputs ---------- #
@@ -255,7 +262,8 @@ async def handle_events(events_to_handle) -> None:
             sys.exit()
 
         if gs.gamestack.stack[-1] == gs.s_join_local_game:
-            input_box.update(event)
+            input_box_IP.update(event)
+            input_box_username.update(event)
 
         if gs.gamestack.stack[-1] == gs.s_server_settings:
             server_settings_1_input_box.update(event)
