@@ -186,6 +186,9 @@ class NetClient(ConnectionListener):
         pass
 
     # ----- Orbeeto Hooks ----- #
+    def request_disconnect(self):
+        connection.Close()
+
     def send_move(self, x, y):
         if not self.connected:
             return

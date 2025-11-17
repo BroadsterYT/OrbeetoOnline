@@ -91,6 +91,7 @@ gs.s_join_local_game.all_sprites.add(join_game_header)
 
 # Pause menu
 pause_menu = menus.PauseMenu()
+pause_menu.net_ref = main_room.player1.net
 pause_release = 0
 
 
