@@ -4,6 +4,8 @@ import os
 import constants as cst
 import tiles
 
+import text
+
 from pygame.math import Vector2 as vec
 
 
@@ -70,6 +72,10 @@ class ServerRealizer:
                 self.local_players[pid].pos = vec(player["x"] + self.room.pos.x, player["y"] + self.room.pos.y)
                 self.local_players[pid].render_images()
                 self.local_players[pid].center_rects()
+            #draws a username label over everyone's character
+            if pid != self.net.my_id:
+                text.draw_text("Player1", player["x"] + self.room.pos.x - 24, player["y"]  + self.room.pos.y - 65, 18)
+
 
         for p_tup in [tup for tup in self.local_players.items() if tup[0] not in self.net.players.keys()]:
             p_tup[1].in_gamestate = False

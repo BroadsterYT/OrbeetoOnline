@@ -66,6 +66,8 @@ s_inventory = GameState('inventory', 1, timer.g_timer.update_elapsed_time)
 s_startup = GameState('startup', 0, timer.g_timer.update_elapsed_time)
 s_join_game = GameState('join_game', 1, timer.g_timer.update_elapsed_time)
 s_join_local_game = GameState('join_local_game', 2, timer.g_timer.update_elapsed_time)
+s_confirm_quit = GameState('confirm_quit', 4, timer.g_timer.update_elapsed_time)
+s_server_settings = GameState('server_settings', 2, timer.g_timer.update_elapsed_time)
 
 
 class GameStack:

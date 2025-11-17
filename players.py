@@ -201,7 +201,10 @@ class Player(cb.ActorBase):
         """
         for box in arr:
             if box.name == 'IPAddressInput':
-                return box.get_text()
+                if box.get_text() == "":
+                    return "localhost"
+                else:
+                    return box.get_text()
         return ""
 
     # ----------------------------------- Stats ---------------------------------- #
