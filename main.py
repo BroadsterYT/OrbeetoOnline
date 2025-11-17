@@ -28,7 +28,7 @@ pygame.display.set_icon(pygame.image.load(os.path.join(os.getcwd(), 'other/orbee
 
 screen.buffer_screen = pygame.Surface((cst.WINWIDTH, cst.WINHEIGHT))
 screen.viewport = pygame.display.set_mode((cst.WINWIDTH, cst.WINHEIGHT),
-                                          pygame.FULLSCREEN | pygame.HWSURFACE | pygame.SCALED | pygame.DOUBLEBUF)
+                                           pygame.HWSURFACE | pygame.SCALED | pygame.DOUBLEBUF)
 
 
 def redraw_game_window() -> None:
@@ -43,12 +43,24 @@ def redraw_game_window() -> None:
 
     screen.buffer_screen.fill((0, 255, 255))
 
+
+main_room = rooms.Room(0, 0)
+gs.s_action.groups.append(main_room)
+
+
 def join_game_window() -> None:
-    main_room = rooms.Room(0, 0)
-    gs.s_action.groups.append(main_room)
+    global join_count
+    global main_room
+
+    main_room.player1.net.server_address = (main_room.player1.get_ip_input(), 12345)
+    print(f"IP input: {main_room.player1.get_ip_input()}")
+    main_room.player1.net.establish_connection()
+
+    join_count = True
     gs.gamestack.pop()
     gs.gamestack.pop()
     gs.gamestack.pop()
+
 
 # Start up menu
 header = Header("Welcome to Orbeeto!", pos=(cst.WINWIDTH // 2 - 260, 180), color=(0, 130, 0))
@@ -114,11 +126,9 @@ server_settings_return_button = menus.MenuButton(gs.s_server_settings, cst.WINWI
 gs.s_server_settings.all_sprites.add(server_settings_header, server_settings_1_header, server_settings_2_header, server_settings_3_header)
 # Pause menu
 pause_menu = menus.PauseMenu()
+pause_menu.net_ref = main_room.player1.net
 pause_release = 0
 
-# took out the inventory menu
-# inventory_menu = menus.InventoryMenu(main_room.player1)
-# inventory_release = 0
 
 prev_time = time.time()  # Used for delta time
 
@@ -167,24 +177,6 @@ async def main(max_frame_rate) -> None:
             pause_menu.is_open = False
         pause_menu.update()
 
-        # ----- Opening and closing inventory menu ----- #
-        """
-        global inventory_release
-        if inventory_release == ctrl.key_released[ctrl.K_MENU] - 1 and not inventory_menu.is_open:
-            gs.gamestack.push(gs.s_inventory)
-            inventory_release = ctrl.key_released[ctrl.K_MENU]
-            inventory_menu.is_open = True
-
-        elif inventory_release == ctrl.key_released[ctrl.K_MENU] - 1 and inventory_menu.is_open and gs.s_inventory in gs.gamestack.stack:
-            gs.gamestack.pop()
-            inventory_release = ctrl.key_released[ctrl.K_MENU]
-            inventory_menu.is_open = False
-
-        elif inventory_menu.is_open and gs.s_inventory not in gs.gamestack.stack:
-            inventory_release = ctrl.key_released[ctrl.K_MENU]
-            inventory_menu.is_open = False
-        inventory_menu.update()
-        """
         # Draw framerate on screen
         try:
             text.draw_text(f'{pow(screen.dt, -1)}', 0, 0)

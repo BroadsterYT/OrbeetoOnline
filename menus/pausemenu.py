@@ -16,6 +16,8 @@ class PauseMenu(cb.AbstractBase):
         super().__init__()
         self.is_open = False
 
+        self.net_ref = None
+
         # ---------- Settings ---------- #
         self.b_settings = menus.MenuButton(gs.s_pause, cst.WINWIDTH // 2, 500, 256, 32, 'Settings',
                                            gs.gamestack.replace, gs.s_pause, gs.s_settings)
@@ -30,6 +32,26 @@ class PauseMenu(cb.AbstractBase):
             self.close_button,
         )
         # TODO: Add settings menu page
+    def leave(self):
+        """either leave current game or the application"""
+        if gs.gamestack.stack[1] == gs.s_pause:
+            self.leavegame()
+            if self.net_ref is not None:
+                self.net_ref.request_disconnect()
+        else:
+            self.exitapplication()
+
+    def leavegame(self):
+        """leave current game"""
+        self.servermanager.stop()
+
+        gs.gamestack.pop()
+        gs.gamestack.push(s_startup)
+
+
+    def exitapplication(self):
+        """exit application"""
+        sys.exit()
 
     def update(self):
         pass

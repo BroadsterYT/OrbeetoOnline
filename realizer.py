@@ -77,6 +77,9 @@ class ServerRealizer:
                 text.draw_text("Player1", player["x"] + self.room.pos.x - 24, player["y"]  + self.room.pos.y - 65, 18)
 
 
+        for p_tup in [tup for tup in self.local_players.items() if tup[0] not in self.net.players.keys()]:
+            p_tup[1].in_gamestate = False
+
     def realize_bullets(self):
         for bid, bullet in self.net.bullets.items():
             if bullet["bullet_type"] == "standard":
