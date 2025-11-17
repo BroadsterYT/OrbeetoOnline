@@ -10,6 +10,7 @@ import constants as cst
 import gamestack as gs
 from gamestack import s_action, s_startup
 
+
 class PauseMenu(cb.AbstractBase):
     def __init__(self):
         """The pause menu"""
@@ -24,7 +25,7 @@ class PauseMenu(cb.AbstractBase):
         self.b_settings_close = menus.MenuButton(gs.s_settings, cst.WINWIDTH // 2, cst.WINHEIGHT // (5/4), 256, 32, 'Back',
                                                  gs.gamestack.replace, gs.s_settings, gs.s_pause)
 
-        self.close_button = menus.MenuButton(gs.s_pause, cst.WINWIDTH // 2, cst.WINHEIGHT // (5/4), 126, 32, 'Quit', gs.gamestack.replace, gs.s_pause, gs.s_confirm_quit)
+        self.close_button = menus.MenuButton(gs.s_pause, cst.WINWIDTH // 2, cst.WINHEIGHT // (5/4), 126, 32, 'Quit', self.leave)
 
         # noinspection PyTypeChecker
         self.add(
@@ -32,6 +33,7 @@ class PauseMenu(cb.AbstractBase):
             self.close_button,
         )
         # TODO: Add settings menu page
+
     def leave(self):
         """either leave current game or the application"""
         if gs.gamestack.stack[1] == gs.s_pause:
@@ -43,11 +45,8 @@ class PauseMenu(cb.AbstractBase):
 
     def leavegame(self):
         """leave current game"""
-        self.servermanager.stop()
-
         gs.gamestack.pop()
         gs.gamestack.push(s_startup)
-
 
     def exitapplication(self):
         """exit application"""
