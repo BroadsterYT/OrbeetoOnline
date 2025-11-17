@@ -96,17 +96,14 @@ class Player(cb.ActorBase):
         groups.all_players.add(self)
         self.room = cb.get_room()
 
-        self.ip_address = self.get_ip_input()
-        #testing
-        self.ip_address = "localhost"
-        self.net = NetClient(self, self.ip_address, 12345)
+        self.net = NetClient(self, "localhost", 12345)
 
         # self.last_textbox_release = ctrl.key_released[ctrl.K_DIALOGUE]
 
         self.set_images(os.path.join(os.getcwd(), 'sprites/orbeeto/orbeeto.png'), 64, 64, 5, 5)
         self.set_rects(0, 0, 64, 64, 32, 32)
 
-        self.pos = vec((cst.WINWIDTH // 2, cst.WINHEIGHT // 2))
+        self.pos = vec((cst.WINWIDTH // 2 + 32, cst.WINHEIGHT // 2))
         self.accel_const = 0.58
 
         self.local_players = {}

@@ -16,14 +16,8 @@ PING_TIMEOUT = 3
 class NetClient(ConnectionListener):
     def __init__(self, client_player, host="localhost", port=12345):
         self.server_address = (host, port)
-        self.udp_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        self.udp_socket.setblocking(False)
-
-        server_req = {
-            "action": "udp_request"
-        }
-        server_req_bin = pickle.dumps(server_req)
-        self.udp_socket.sendto(server_req_bin, self.server_address)
+        self.udp_socket = None
+        self.connected = False
 
         self.my_id = None
         self.client_player = client_player
@@ -36,8 +30,21 @@ class NetClient(ConnectionListener):
         self.last_ping = 0
         self.last_pong = time.time()
 
-        self.Connect((host, port))
+        # self.Connect((host, port))
         print(f"Hooked to Player on {host} with port {port}")
+
+    def establish_connection(self):
+        self.udp_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        self.udp_socket.setblocking(False)
+
+        server_req = {
+            "action": "udp_request"
+        }
+        server_req_bin = pickle.dumps(server_req)
+        self.udp_socket.sendto(server_req_bin, self.server_address)
+        print(f"host: {self.server_address[0]}, port: {self.server_address[1]}")
+        self.Connect((self.server_address[0], self.server_address[1]))
+        self.connected = True
 
     def Network_init(self, data):
         self.my_id = data["id"]
@@ -145,6 +152,9 @@ class NetClient(ConnectionListener):
         self.walls = data["walls"]
 
     def Loop(self):
+        if not self.connected:
+            return
+
         # UDP Send/Receive
         try:
             data, _ = self.udp_socket.recvfrom(1024)
@@ -177,6 +187,9 @@ class NetClient(ConnectionListener):
 
     # ----- Orbeeto Hooks ----- #
     def send_move(self, x, y):
+        if not self.connected:
+            return
+
         connection.Send({
             "action": "move",
             "x": x,
@@ -184,6 +197,9 @@ class NetClient(ConnectionListener):
         })
 
     def send_fire(self, bullet_type: str, x, y, vel_x, vel_y, hit_w: int, hit_h: int):
+        if not self.connected:
+            return
+
         fire = {
             "action": "fire",
             "bullet_type": bullet_type,

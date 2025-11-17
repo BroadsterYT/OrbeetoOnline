@@ -34,6 +34,7 @@ class PlayerChannel(Channel):
         if self.state["hp"] > 0:
             self.state["x"] = data["x"]
             self.state["y"] = data["y"]
+            print(f"x: {data['x']}, y: {data['y']}")
 
     def Network_fire(self, data):
         bullet_id = self._server.spawn_bullet(

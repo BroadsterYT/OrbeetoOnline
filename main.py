@@ -26,7 +26,7 @@ pygame.display.set_icon(pygame.image.load(os.path.join(os.getcwd(), 'other/orbee
 
 screen.buffer_screen = pygame.Surface((cst.WINWIDTH, cst.WINHEIGHT))
 screen.viewport = pygame.display.set_mode((cst.WINWIDTH, cst.WINHEIGHT),
-                                          pygame.FULLSCREEN | pygame.HWSURFACE | pygame.SCALED | pygame.DOUBLEBUF)
+                                           pygame.HWSURFACE | pygame.SCALED | pygame.DOUBLEBUF)
 
 
 def redraw_game_window() -> None:
@@ -41,42 +41,24 @@ def redraw_game_window() -> None:
 
     screen.buffer_screen.fill((0, 255, 255))
 
-def cleanup_room(room):
-    """Fully remove a Room and all its sprites from the game."""
-    # Remove all sprites in the room from all groups
-    if hasattr(room, "all_sprites"):
-        for sprite in list(room.all_sprites):  # make a copy to safely iterate
-            # Remove sprite from all groups
-            for group in sprite.groups():
-                group.remove(sprite)
-            # Cleanup network client if present
-            if hasattr(sprite, "net") and sprite.net is not None:
-                sprite.net.cleanup()
-                del sprite.net
-            # Delete the sprite reference
-            del sprite
 
-    # Finally, delete the room itself
-    del room
-
+main_room = rooms.Room(0, 0)
+gs.s_action.groups.append(main_room)
 
 
 def join_game_window() -> None:
     global join_count
     global main_room
-    if join_count == True:
-        """This should remove everything that is being created
-         as sprites when initializing main_room so that it can be redefined"""
-        cleanup_room(main_room)
-        gs.s_action.groups.clear()
-    main_room = rooms.Room(0, 0)
-    gs.s_action.groups.append(main_room)
+
+    main_room.player1.net.server_address = (main_room.player1.get_ip_input(), 12345)
+    print(f"IP input: {main_room.player1.get_ip_input()}")
+    main_room.player1.net.establish_connection()
+
     join_count = True
     gs.gamestack.pop()
     gs.gamestack.pop()
     gs.gamestack.pop()
 
-main_room = None
 
 # Start up menu
 header = Header("Welcome to Orbeeto", pos=(cst.WINWIDTH // 2 - 270, 180), color=(0, 250, 0))
@@ -111,9 +93,6 @@ gs.s_join_local_game.all_sprites.add(join_game_header)
 pause_menu = menus.PauseMenu()
 pause_release = 0
 
-# took out the inventory menu
-# inventory_menu = menus.InventoryMenu(main_room.player1)
-# inventory_release = 0
 
 prev_time = time.time()  # Used for delta time
 
@@ -161,24 +140,6 @@ async def main(max_frame_rate) -> None:
             pause_menu.is_open = False
         pause_menu.update()
 
-        # ----- Opening and closing inventory menu ----- #
-        """
-        global inventory_release
-        if inventory_release == ctrl.key_released[ctrl.K_MENU] - 1 and not inventory_menu.is_open:
-            gs.gamestack.push(gs.s_inventory)
-            inventory_release = ctrl.key_released[ctrl.K_MENU]
-            inventory_menu.is_open = True
-
-        elif inventory_release == ctrl.key_released[ctrl.K_MENU] - 1 and inventory_menu.is_open and gs.s_inventory in gs.gamestack.stack:
-            gs.gamestack.pop()
-            inventory_release = ctrl.key_released[ctrl.K_MENU]
-            inventory_menu.is_open = False
-
-        elif inventory_menu.is_open and gs.s_inventory not in gs.gamestack.stack:
-            inventory_release = ctrl.key_released[ctrl.K_MENU]
-            inventory_menu.is_open = False
-        inventory_menu.update()
-        """
         # Draw framerate on screen
         try:
             text.draw_text(f'{pow(screen.dt, -1)}', 0, 0)
