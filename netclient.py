@@ -4,9 +4,13 @@ import pickle
 import socket
 import time
 
+
+
 from pygame.math import Vector2 as vec
 
 import screen
+
+
 
 PING_INTERVAL = 0.5
 #changed this from 1 to 3
@@ -151,6 +155,25 @@ class NetClient(ConnectionListener):
     def Network_update_walls(self, data):
         self.walls = data["walls"]
 
+    def handle_timeout(self):
+
+        self.connected = False
+        self.cleanup()
+
+        try:
+            import gamestack
+
+            # Only pop if there is more than 1 item in the stack
+            if len(gamestack.gamestack.stack) > 1:
+                gamestack.gamestack.pop()
+            else:
+                gamestack.gamestack.stack = [
+                    gamestack.s_action,
+                    gamestack.s_startup
+                ]
+        except Exception as e:
+            print("Failed to pop game state:", e)
+
     def Loop(self):
         if not self.connected:
             return
@@ -179,7 +202,10 @@ class NetClient(ConnectionListener):
 
         if now - self.last_pong > PING_TIMEOUT:
             print("Ping timeout")
+            self.handle_timeout()
             #exit(0)
+
+
 
     def Network(self, data):
         # print("Unhandled message: ", data)

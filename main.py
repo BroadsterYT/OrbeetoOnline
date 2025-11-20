@@ -239,6 +239,10 @@ def check_key_release(event, is_mouse) -> None:
             if event.type == pygame.MOUSEBUTTONUP and event.button == button:
                 ctrl.key_released[button] += 1
 
+def pop_state():
+    gs.gamestack.pop()
+
+
 
 async def handle_events(events_to_handle) -> None:
     """Handles the list of pygame events given
