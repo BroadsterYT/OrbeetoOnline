@@ -9,7 +9,7 @@ import classbases as cb
 import constants as cst
 import gamestack as gs
 from gamestack import s_action, s_startup
-
+from servermanager import servermanager
 
 class PauseMenu(cb.AbstractBase):
     def __init__(self):
@@ -45,6 +45,7 @@ class PauseMenu(cb.AbstractBase):
 
     def leavegame(self):
         """leave current game"""
+        servermanager.stop()
         gs.gamestack.pop()
         gs.gamestack.push(s_startup)
 
