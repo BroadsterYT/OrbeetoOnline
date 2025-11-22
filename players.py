@@ -326,6 +326,12 @@ class Player(cb.ActorBase):
 
         return output
 
+    def print_label(self):
+        for box in arr:
+            if box.name == 'UsernameInput':
+                username = box.get_text()
+                text.draw_text(username, self.pos.x - (11 * (len(username) // 2)), self.pos.y - 60, 18, "Monospace")
+
     def is_swinging(self) -> bool:
         """Determines if the player should be accelerating towards the grappling hook.
 

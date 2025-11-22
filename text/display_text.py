@@ -15,7 +15,7 @@ import constants as cst
 import groups
 
 
-def draw_text(any_text: str, pos_x, pos_y, font_size= 24) -> None:
+def draw_text(any_text: str, pos_x, pos_y, font_size= 24, font_family="Arial") -> None:
     """Draws text on to the screen.
 
     :param any_text: The text to display
@@ -24,7 +24,7 @@ def draw_text(any_text: str, pos_x, pos_y, font_size= 24) -> None:
     :param font_size: font size of the text
     :return: None
     """
-    font = pygame.font.SysFont('Arial', font_size)
+    font = pygame.font.SysFont(font_family, font_size)
     image = font.render(any_text, True, (0, 0, 0))
     screen.buffer_screen.blit(image, vec(pos_x, pos_y))
 

@@ -413,6 +413,8 @@ class Room(cb.AbstractBase):
         self.pos = vec(self.border_west.pos.x + self.border_west.hitbox.width // 2,
                        self.border_north.pos.y + self.border_north.height // 2) - self.pos_offset
 
+        self.player1.print_label()
+
     def get_accel(self) -> vec:
         """Returns the acceleration value to give to the room
 

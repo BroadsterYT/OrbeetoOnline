@@ -184,12 +184,14 @@ async def main(max_frame_rate) -> None:
             pass
 
         #player name label
+        """
         if gs.gamestack.stack[-1] == gs.s_action:
             for box in arr:
                 if box.name == 'UsernameInput':
                     username = box.get_text()
-                    text.draw_text(username, cst.WINWIDTH // 2 - 24, cst.WINHEIGHT //2 - 65, 18)
-
+                    #text.draw_text(username, player.pos.x, player.pos.y - 65, 18)
+                    #text.draw_text(username, cst.WINWIDTH // 2 - 24, cst.WINHEIGHT //2 - 65, 18)
+        """
 
         # ---------- Mouse Inputs ---------- #
         if ctrl.is_input_held[1] and ctrl.release_check:
