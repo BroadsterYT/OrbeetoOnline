@@ -2,6 +2,7 @@ import pickle
 
 from PodSixNet.Server import Server
 from PodSixNet.Channel import Channel
+from cv2 import data
 
 from server_rooms import ServerRoom
 import calc
@@ -24,8 +25,13 @@ class PlayerChannel(Channel):
             "vel_y": 0,
             "hp": 50,
             "hit_w": 32,
-            "hit_h": 32
+            "hit_h": 32,
+            "username": None
         }
+
+    def Network_set_username(self, data):
+        print("message received!")
+        self.state["username"] = data["username"]
 
     def Network_ping(self, data):
         self.Send({"action": "pong"})

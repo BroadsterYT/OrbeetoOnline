@@ -6,6 +6,8 @@ import time
 
 from pygame.math import Vector2 as vec
 
+from menus.menuinputbars import arr
+
 import screen
 
 PING_INTERVAL = 0.5
@@ -45,6 +47,21 @@ class NetClient(ConnectionListener):
         print(f"host: {self.server_address[0]}, port: {self.server_address[1]}")
         self.Connect((self.server_address[0], self.server_address[1]))
         self.connected = True
+        self.send_username()
+
+    def send_username(self):
+        username = "Player"
+        for box in arr:
+            if box.name == "UsernameInput":
+                username = box.get_text()
+        print("username: ", username)
+
+        connection.Send({
+            "action": "set_username",
+            "id": self.my_id,
+            "username": username
+        })
+        print("message send!")
 
     def Network_init(self, data):
         self.my_id = data["id"]
