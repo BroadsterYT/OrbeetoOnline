@@ -10,9 +10,9 @@ from menus.menuinputbars import arr
 
 import screen
 
-PING_INTERVAL = 0.5
-#changed this from 1 to 3
-PING_TIMEOUT = 3
+PING_INTERVAL = 1
+#changed this from 1 to 6
+PING_TIMEOUT = 6
 
 
 class NetClient(ConnectionListener):
@@ -30,7 +30,7 @@ class NetClient(ConnectionListener):
         self.walls = {}
 
         self.last_ping = 0
-        self.last_pong = time.time()
+        self.last_pong = time.time() + 5
 
         # self.Connect((host, port))
         print(f"Hooked to Player on {host} with port {port}")
@@ -61,7 +61,6 @@ class NetClient(ConnectionListener):
             "id": self.my_id,
             "username": username
         })
-        print("message send!")
 
     def Network_init(self, data):
         self.my_id = data["id"]
@@ -73,6 +72,7 @@ class NetClient(ConnectionListener):
 
     def Network_update_players(self, data):
         if self.my_id is not None:
+            #is this needed?(I only added it after adding username and everything was working fine before but I dont know where players is being updated with the new values instead.)
             self.players = data["players"]
             self.client_player.hp = self.players[self.my_id]["hp"]
 
@@ -190,10 +190,10 @@ class NetClient(ConnectionListener):
         self.Pump()
 
         now = time.time()
-        if now - self.last_pong > PING_INTERVAL:
+        if (now - self.last_pong) > PING_INTERVAL:
             connection.Send({"action": "ping"})
-            # print("Ping sent.")
 
+        now = time.time()
         if now - self.last_pong > PING_TIMEOUT:
             print("Ping timeout")
             #exit(0)
