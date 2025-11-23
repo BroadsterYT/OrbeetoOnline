@@ -35,6 +35,8 @@ class NetClient(ConnectionListener):
         self.last_ping = 0
         self.last_pong = None
 
+        self.connection_lost_header = None
+
         # self.Connect((host, port))
         print(f"Hooked to Player on {host} with port {port}")
 
@@ -211,6 +213,7 @@ class NetClient(ConnectionListener):
         servermanager.stop()
         self.connected = False
         gs.gamestack.push(gs.s_startup)
+        gs.s_startup.all_sprites.add(self.connection_lost_header)
 
     def Network(self, data):
         # print("Unhandled message: ", data)

@@ -62,12 +62,18 @@ def join_game_window() -> None:
 
 
 # Start up menu
+def play_game_button() -> None:
+    gs.gamestack.push(gs.s_join_game)
+    gs.s_startup.all_sprites.remove(ServerConnection_failed_message)
+
 header = Header("Welcome to Orbeeto!", pos=(cst.WINWIDTH // 2 - 260, 180), color=(0, 130, 0))
 message = Header("press 'Esc' for settings", pos=(cst.WINWIDTH // 2 - 120, 250), font_size=30, color=(250, 0, 0))
 PlayGame_button = menus.MenuButton(gs.s_startup, cst.WINWIDTH // 2, 475, 286, 32, 'Play Game',
-                                   lambda: gs.gamestack.push(gs.s_join_game))
+                                   play_game_button)
 end_game_button = menus.MenuButton(gs.s_startup, cst.WINWIDTH // 2, 550, 322, 32, 'Leave Game',
                                             sys.exit)
+ServerConnection_failed_message = Header("Lost connection to server!", pos=(cst.WINWIDTH // 2 - 240, 340), font_size=55, color=(250, 0, 0))
+main_room.player1.net.connection_lost_header = ServerConnection_failed_message
 gs.s_startup.all_sprites.add(header, message)
 
 # join local or create game menu
@@ -80,6 +86,10 @@ Join_game_back_button = menus.MenuButton(gs.s_join_game, cst.WINWIDTH // 2, 550,
 
 
 #join local game
+def join_local_game_back_button():
+    gs.gamestack.pop()
+    gs.s_join_local_game.all_sprites.remove(establish_connection_failed_message)
+
 join_game_header = Header("Join locally hosted Game", pos=(cst.WINWIDTH // 2 - 230, 200), font_size=55, color=(250, 0, 0))
 IPAddress_header = Header("Host IP Address:", pos=(cst.WINWIDTH // 2 - 150, 300), font_size=30, color=(0, 0, 100))
 input_box_IP = menus.InputBox(gs.s_join_local_game, cst.WINWIDTH // 2 - 150, 320, 300, 35, 'IPAddressInput')
@@ -88,7 +98,8 @@ input_box_username = menus.InputBox(gs.s_join_local_game, cst.WINWIDTH // 2 - 15
 join_game_button = menus.MenuButton(gs.s_join_local_game, cst.WINWIDTH // 2, 500, 130, 32, 'Join',
                                                 join_game_window)
 join_local_game_back_button = menus.MenuButton(gs.s_join_local_game, cst.WINWIDTH // 2, 550, 130, 32, 'Back',
-                                         gs.gamestack.pop)
+                                         join_local_game_back_button)
+establish_connection_failed_message = Header("Connection failed!", pos=(cst.WINWIDTH // 2 - 90, 440), font_size=30, color=(250, 0, 0))
 
 gs.s_join_local_game.all_sprites.add(join_game_header, IPAddress_header, Username_header)
 
@@ -138,6 +149,7 @@ async def main(max_frame_rate) -> None:
     :param max_frame_rate: The maximum framerate the game should run at
     :return: None
     """
+    global running
     loop = asyncio.get_event_loop()
     next_frame_target = 0.0
     sec_per_frame = 1 / max_frame_rate
@@ -203,6 +215,7 @@ async def main(max_frame_rate) -> None:
 
             elif (time.time() - connection_established_time) > 3:
                 print("Connection failed!")
+                gs.s_join_local_game.all_sprites.add(establish_connection_failed_message)
                 connecting = False
 
         # ---------- Mouse Inputs ---------- #
@@ -260,12 +273,12 @@ async def handle_events(events_to_handle) -> None:
     :param events_to_handle: The list of pygame events to handle
     :return: None
     """
-
+    global running
     for event in events_to_handle:
         key_pressed = pygame.key.get_pressed()
 
         if event.type == QUIT:
-            sys.exit()
+            running = False
 
         if gs.gamestack.stack[-1] == gs.s_join_local_game:
             input_box_IP.update(event)
