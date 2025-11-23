@@ -8,6 +8,9 @@ from pygame.math import Vector2 as vec
 
 from menus.menuinputbars import arr
 
+import gamestack as gs
+from servermanager import servermanager
+
 import screen
 
 PING_INTERVAL = 2
@@ -31,8 +34,6 @@ class NetClient(ConnectionListener):
 
         self.last_ping = 0
         self.last_pong = None
-        #just for testing
-        self.start = time.time()
 
         # self.Connect((host, port))
         print(f"Hooked to Player on {host} with port {port}")
@@ -201,7 +202,12 @@ class NetClient(ConnectionListener):
 
         if (time.time() - self.last_pong) > PING_TIMEOUT:
             print("Ping timeout")
-            #exit(0)
+            self.handle_timeout()
+
+    def handle_timeout(self):
+        servermanager.stop()
+        self.connected = False
+        gs.gamestack.push(gs.s_startup)
 
     def Network(self, data):
         # print("Unhandled message: ", data)
