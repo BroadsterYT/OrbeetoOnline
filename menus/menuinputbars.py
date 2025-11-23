@@ -2,6 +2,7 @@ import pygame
 import classbases as cb
 import constants as cst
 import gamestack as gs
+import text
 
 arr = []
 
@@ -25,6 +26,10 @@ class InputBox(cb.ActorBase):
         self.add_to_gamestate()
 
         self.rect = pygame.Rect(x, y, width, height)
+        self.width = width
+        self.height = height
+        self.x = x
+        self.y = y
         self.hitbox = self.rect.copy()
         self.text = initial_text
         self.font = pygame.font.Font(None, 32)
@@ -58,28 +63,30 @@ class InputBox(cb.ActorBase):
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_RETURN:
                 print(f"Input confirmed: {self.text}")
-                self.text = ""
+
             elif event.key == pygame.K_BACKSPACE:
-                if self.character_limit_flag == True:
-                    self.text = self.text[20:]
+                self.text = self.text[:-1]
+                if (len(self.text) < self.character_limit):
                     self.character_limit_flag = False
-                else:
-                    self.text = self.text[:-1]
+
             else:
                 if len(self.text) < self.character_limit:
                     self.text += event.unicode
                 else:
-                    if not self.character_limit_flag:
-                        print("Error: limited character amount reached")
-                        self.text = "too many characters!" + self.text
                     self.character_limit_flag = True
+                    print("Error: limited character amount reached")
 
+
+    def draw_warning(self):
+        text.draw_text("Character Limit!", self.x + self.width + 7, self.y + (self.height/4), 16, "Arial", (255, 0, 0))
 
     def update(self, event=None):
         if event:
             self.check_click(event)
             self.handle_keyboard(event)
 
+        if self.character_limit_flag:
+            self.draw_warning()
         # draw box
         self.image.fill((255, 255, 255))
         pygame.draw.rect(self.image, self.border_color, self.image.get_rect(), 2)
