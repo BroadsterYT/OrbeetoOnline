@@ -10,7 +10,7 @@ from menus.menuinputbars import arr
 
 import screen
 
-PING_INTERVAL = 1
+PING_INTERVAL = 2
 #changed this from 1 to 6
 PING_TIMEOUT = 6
 
@@ -30,7 +30,9 @@ class NetClient(ConnectionListener):
         self.walls = {}
 
         self.last_ping = 0
-        self.last_pong = time.time() + 5
+        self.last_pong = None
+        #just for testing
+        self.start = time.time()
 
         # self.Connect((host, port))
         print(f"Hooked to Player on {host} with port {port}")
@@ -48,6 +50,7 @@ class NetClient(ConnectionListener):
         self.Connect((self.server_address[0], self.server_address[1]))
         self.connected = True
         self.send_username()
+        self.last_pong = time.time()
 
     def send_username(self):
         username = "Player"
@@ -189,12 +192,10 @@ class NetClient(ConnectionListener):
         connection.Pump()
         self.Pump()
 
-        now = time.time()
-        if (now - self.last_pong) > PING_INTERVAL:
+        if (time.time() - self.last_pong) > PING_INTERVAL:
             connection.Send({"action": "ping"})
 
-        now = time.time()
-        if now - self.last_pong > PING_TIMEOUT:
+        if (time.time() - self.last_pong) > PING_TIMEOUT:
             print("Ping timeout")
             #exit(0)
 

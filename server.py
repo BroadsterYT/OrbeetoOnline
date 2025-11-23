@@ -30,7 +30,6 @@ class PlayerChannel(Channel):
         }
 
     def Network_set_username(self, data):
-        print("message received!")
         self.state["username"] = data["username"]
 
     def Network_ping(self, data):
