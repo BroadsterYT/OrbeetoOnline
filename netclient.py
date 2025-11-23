@@ -192,6 +192,9 @@ class NetClient(ConnectionListener):
                 self.udp_socket.sendto(pickle.dumps(msg), self.server_address)
         except BlockingIOError:
             pass
+        except ConnectionResetError:
+            print("The server closed the connection or is unreachable!")
+            self.handle_timeout()
 
         # TCP Send/Receive
         connection.Pump()
