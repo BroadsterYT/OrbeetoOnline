@@ -20,7 +20,6 @@ from gamestack import s_server_settings
 
 from menus.StartUpmenu import Header
 from servermanager import servermanager
-from menus.menuinputbars import arr
 
 pygame.init()
 pygame.display.set_caption('Orbeeto')
@@ -45,28 +44,21 @@ def redraw_game_window() -> None:
 
 main_room = rooms.Room(0, 0)
 gs.s_action.groups.append(main_room)
-
+connecting = False
+connection_established_time = 0.0
+connection_time = 0.0
+count = 0
 
 def join_game_window() -> None:
-    global main_room
+    global main_room, connecting, connection_established_time, connection_time
 
     main_room.player1.net.server_address = (main_room.player1.get_ip_input(), 12345)
-    print(f"IP input: {main_room.player1.get_ip_input()}")
     main_room.player1.net.establish_connection()
 
+    print(f"Connecting to {main_room.player1.get_ip_input()}...")
+    connecting = True
     connection_established_time = time.time()
-    while True:
-        main_room.player1.net.Pre_game_pump()
-        print(main_room.player1.net.connected)
-        if (main_room.player1.net.connected):
-            gs.gamestack.pop()
-            gs.gamestack.pop()
-            gs.gamestack.pop()
-            break
-
-        elif ((time.time() - connection_established_time) > 3):
-            print("Connection failed!")
-            break
+    connection_time = time.time()
 
 
 # Start up menu
@@ -190,15 +182,28 @@ async def main(max_frame_rate) -> None:
         except ZeroDivisionError:
             pass
 
-        #player name label
-        """
-        if gs.gamestack.stack[-1] == gs.s_action:
-            for box in arr:
-                if box.name == 'UsernameInput':
-                    username = box.get_text()
-                    #text.draw_text(username, player.pos.x, player.pos.y - 65, 18)
-                    #text.draw_text(username, cst.WINWIDTH // 2 - 24, cst.WINHEIGHT //2 - 65, 18)
-        """
+        global connecting, count, connection_time
+        if connecting:
+            main_room.player1.net.Pre_game_pump()
+            if gs.gamestack.stack[-1] == gs.s_join_local_game:
+                if time.time()-connection_time > 0.3:
+                    if count < 3:
+                        count += 1
+                    else:
+                        count = 0
+                    connection_time = time.time()
+
+                any_text = "Connecting" + ("." * count)
+                text.draw_text(any_text, cst.WINWIDTH // 2 - 60, 435, color=(255, 0, 0))
+            if main_room.player1.net.connected:
+                gs.gamestack.pop()
+                gs.gamestack.pop()
+                gs.gamestack.pop()
+                connecting = False
+
+            elif (time.time() - connection_established_time) > 3:
+                print("Connection failed!")
+                connecting = False
 
         # ---------- Mouse Inputs ---------- #
         if ctrl.is_input_held[1] and ctrl.release_check:
