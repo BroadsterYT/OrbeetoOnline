@@ -43,23 +43,30 @@ def redraw_game_window() -> None:
 
     screen.buffer_screen.fill((0, 255, 255))
 
-
 main_room = rooms.Room(0, 0)
 gs.s_action.groups.append(main_room)
 
 
 def join_game_window() -> None:
-    global join_count
     global main_room
 
     main_room.player1.net.server_address = (main_room.player1.get_ip_input(), 12345)
     print(f"IP input: {main_room.player1.get_ip_input()}")
     main_room.player1.net.establish_connection()
 
-    join_count = True
-    gs.gamestack.pop()
-    gs.gamestack.pop()
-    gs.gamestack.pop()
+    connection_established_time = time.time()
+    while True:
+        main_room.player1.net.Pre_game_pump()
+        print(main_room.player1.net.connected)
+        if (main_room.player1.net.connected):
+            gs.gamestack.pop()
+            gs.gamestack.pop()
+            gs.gamestack.pop()
+            break
+
+        elif ((time.time() - connection_established_time) > 3):
+            print("Connection failed!")
+            break
 
 
 # Start up menu

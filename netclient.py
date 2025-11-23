@@ -48,7 +48,6 @@ class NetClient(ConnectionListener):
         self.udp_socket.sendto(server_req_bin, self.server_address)
         print(f"host: {self.server_address[0]}, port: {self.server_address[1]}")
         self.Connect((self.server_address[0], self.server_address[1]))
-        self.connected = True
         self.send_username()
         self.last_pong = time.time()
 
@@ -68,6 +67,7 @@ class NetClient(ConnectionListener):
     def Network_init(self, data):
         self.my_id = data["id"]
         print(f"Connected as Player {self.my_id}")
+        self.connected = True
 
     def Network_pong(self, data):
         # print("Pong received")
@@ -171,6 +171,10 @@ class NetClient(ConnectionListener):
     def Network_update_walls(self, data):
         self.walls = data["walls"]
 
+    def Pre_game_pump(self):
+        connection.Pump()
+        self.Pump()
+
     def Loop(self):
         if not self.connected:
             return
@@ -233,7 +237,7 @@ class NetClient(ConnectionListener):
         }
         self.udp_socket.sendto(pickle.dumps(fire), self.server_address)
 
-    def cleanup (self):
+    def cleanup(self):
         try:
             self.udp_socket.close()
         except Exception:
