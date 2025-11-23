@@ -162,6 +162,7 @@ class NetClient(ConnectionListener):
 
         try:
             import gamestack
+            #test for push
 
             # Only pop if there is more than 1 item in the stack
             if len(gamestack.gamestack.stack) > 1:
