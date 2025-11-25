@@ -117,6 +117,7 @@ gs.s_confirm_quit.all_sprites.add(quit_game_header)
 def start_server():
     servermanager.start()
     gs.gamestack.pop()
+    gs.gamestack.push(gs.s_join_local_game)
 
 server_settings_header = Header("Server settings", pos=(cst.WINWIDTH // 2 - 145, 150), font_size=55, color=(250, 0, 0))
 
