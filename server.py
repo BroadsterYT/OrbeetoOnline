@@ -110,6 +110,11 @@ class OrbeetoServer(Server):
         if channel.id in self.players:
             del self.players[channel.id]
 
+        self.sendToAll({
+            "action": "join_notice",
+            "text": f"{username} disconected the from the server"
+        })
+
     def spawn_bullet(self, owner, bullet_type: str, x, y, vel_x, vel_y, hit_w: int, hit_h: int):
         bullet_id = self.next_bullet_id
         self.next_bullet_id += 1
