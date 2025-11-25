@@ -36,7 +36,8 @@ class PlayerChannel(Channel):
         self.Send({"action": "pong"})
 
     def Network_move(self, data):
-        if self.state["hp"] > 0:
+        #this might be why spectator mode isnt working,
+        if self.state["hp"]  > 0:
             self.state["x"] = data["x"]
             self.state["y"] = data["y"]
 
@@ -87,6 +88,15 @@ class OrbeetoServer(Server):
         self.next_player_id += 1
         channel.Send({"action": "init", "id": channel.id})
         print(f"Player {channel.id} connected.")
+
+        self.sendToAll({
+        "action": "join_notice",
+        "text": f"{username} joined the game!"
+        })
+
+    def sendToAll(self, message):
+        for c in self.connections.values():
+            c.Send(message)
 
     def _build_room(self, room_x, room_y):
         self.walls.clear()

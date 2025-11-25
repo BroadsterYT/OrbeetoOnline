@@ -261,3 +261,16 @@ class NetClient(ConnectionListener):
             print(Exception)
             pass
         print("Network client cleaned up.")
+
+def Network_join_notice(self, data):
+    """
+    Handles a 'player joined' message from the server.
+    Spawns an IndicatorText floating notice above the center of the screen.
+    """
+    # Example: data = {"text": "Player Bob joined!"}
+    # Spawn text at top-center of screen
+    pos_x = cst.WINWIDTH // 2
+    pos_y = 50  # small offset from top
+    from text import IndicatorText  # make sure to import it at top
+    IndicatorText(pos_x, pos_y, data["text"], duration=3.0)
+
