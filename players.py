@@ -139,6 +139,7 @@ class Player(cb.ActorBase):
         self.last_hit = timer.g_timer.time
 
         self.grapple_speed = 2.0
+        self.is_spectator = False
 
         # --------------------------------- Stat Bars -------------------------------- #
         # self.health_bar = statbars.StatBar(self, 0, 'hp', 'max_hp', 'sprites/stat_bars/health_bar.png')
@@ -257,7 +258,7 @@ class Player(cb.ActorBase):
         regen_delay = 5
         regens_per_sec = 0
 
-        if time_hit < regen_delay:
+        if (time_hit < regen_delay) and (self.is_spectator):
             regens_per_sec = 0
         elif time_hit >= regen_delay:
             regens_per_sec = pow(0.95, -(time_hit - regen_delay + 1)) - (1 / regen_delay)
@@ -275,7 +276,8 @@ class Player(cb.ActorBase):
         self.accel = self.get_accel()
         self.accel_movement()
 
-        self.shoot()
+        if self.is_spectator == False:
+            self.shoot()
 
     def get_accel(self) -> pygame.math.Vector2:
         """Returns the acceleration that the player should undergo given specific conditions.
@@ -464,9 +466,14 @@ class Player(cb.ActorBase):
 
     @cb.check_update_state
     def update(self):
+        if self.hp == 0 and not self.is_spectator:
+            self.enter_spectator_mode()
+
         self.movement()
 
-        self._animate()
+        if self.is_spectator == False:
+            self._animate()
+
         self.rotate_image(calc.get_angle_to_mouse(self))
 
         # Heat damage
@@ -477,7 +484,8 @@ class Player(cb.ActorBase):
             self.rect.center = vec(self.pos.x + rand_x, self.pos.y + rand_y)
 
             if calc.get_game_tdiff(self.last_overheat) > self.overheat_rate:
-                self.hp -= math.ceil(0.02 * self.max_hp)
+                if self.gun_heat > 0:
+                    self.hp -= math.ceil(0.02 * self.max_hp)
                 self.last_overheat = timer.g_timer.time
                 self.last_hit = timer.g_timer.time
                 groups.all_font_chars.add(
@@ -486,13 +494,13 @@ class Player(cb.ActorBase):
         else:
             self._passive_hp_regen()
 
-        if self.hp <= 0:
-            self.kill()
 
-        self.net.send_move(
-            self.pos.x - self.room.pos.x,
-            self.pos.y - self.room.pos.y,
-        )
+        if self.is_spectator == False:
+            self.net.send_move(
+                self.pos.x - self.room.pos.x,
+                self.pos.y - self.room.pos.y,
+            )
+
         self.net.Loop()
 
         self.realizer.realize_walls()
@@ -505,6 +513,15 @@ class Player(cb.ActorBase):
 
     def __repr__(self):
         return f'Player({self.pos}, {self.vel}, {self.accel})'
+
+    def enter_spectator_mode(self):
+        self.is_spectator = True
+        self.hp = 0
+        print("enetered spectator mode")
+        self.net.send_move(
+            self.room.pos.x + cst.WINWIDTH // 2,
+            self.room.pos.y - 50,
+        )
 
 
 if __name__ == '__main__':

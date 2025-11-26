@@ -95,24 +95,35 @@ class StatBarTest(cb.ActorBase):
         self.center_rects()
         self._animate()
 
+
+
+    # made some changes it was giving me tons of issues after the player "dies"
     def _animate(self):
         self.image.fill((0, 0, 1))
-        hp_bar = pygame.Surface(vec((self.owner.hp / self.owner.max_hp) * 128, 16))
-        hp_bar.fill((255, 0, 0))
-        self.image.blit(hp_bar, (0, 0))
+
+        max_hp = max(self.owner.max_hp, 1)
+        hp_ratio = max(min(self.owner.hp / max_hp, 1), 0)
+        hp_width = math.floor(hp_ratio * 128)
+
+        if hp_width > 0:
+            hp_bar = pygame.Surface((hp_width, 16))
+            hp_bar.fill((255, 0, 0))
+            self.image.blit(hp_bar, (0, 0))
 
         heat_bar_width = math.floor(self.owner.gun_heat / self.owner.heat_thresh * 128)
-        if heat_bar_width > 128:
-            heat_bar_width = 128
+        heat_bar_width = max(min(heat_bar_width, 128), 0)
 
-        heat_bar = pygame.Surface(vec(heat_bar_width, 6))
-        dim_color = pygame.Color(255, 255, 20)
-        bright_color = pygame.Color(250, 250, 250)
-        for i in range(heat_bar_width):
-            color_strip = pygame.Surface(vec(1, 6))
-            color_strip.fill(dim_color.lerp(bright_color, i / 128))
-            heat_bar.blit(color_strip, (i, 0))
-        self.image.blit(heat_bar, (0, 10))
+        if heat_bar_width > 0:
+            heat_bar = pygame.Surface((heat_bar_width, 6))
+            dim_color = pygame.Color(255, 255, 20)
+            bright_color = pygame.Color(250, 250, 250)
+
+            for i in range(heat_bar_width):
+                color_strip = pygame.Surface((1, 6))
+                color_strip.fill(dim_color.lerp(bright_color, i / 128))
+                heat_bar.blit(color_strip, (i, 0))
+
+            self.image.blit(heat_bar, (0, 10))
 
 
 class BarNumbersTest(cb.ActorBase):

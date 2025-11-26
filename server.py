@@ -31,7 +31,9 @@ class PlayerChannel(Channel):
         self.Send({"action": "pong"})
 
     def Network_move(self, data):
-        if self.state["hp"] > 0:
+
+       # if self.state["hp"] >= 0: this can be removed it was in here before but im not sure if anyone needed it
+       # with it in however it makes it hard to send the "final" move that moves player oob when they die
             self.state["x"] = data["x"]
             self.state["y"] = data["y"]
 
@@ -340,7 +342,9 @@ class OrbeetoServer(Server):
 
             # Intentional: let players take damage from own bullets
             if b_data["bullet_type"] != "portal_bullet":
-                player["hp"] -= 1
+                if player["hp"] != 0:
+                    player["hp"] -= 1
+
                 to_destroy.append(bid)
 
     def _handle_bullets_through_portals(self, b_data):
