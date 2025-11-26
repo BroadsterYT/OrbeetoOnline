@@ -274,3 +274,4 @@ def Network_join_notice(self, data):
     from text import IndicatorText  # make sure to import it at top
     IndicatorText(pos_x, pos_y, data["text"], duration=3.0)
 
+#for push
