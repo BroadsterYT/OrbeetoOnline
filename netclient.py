@@ -45,15 +45,19 @@ class NetClient(ConnectionListener):
         self.client_player.gun_heat = 0
         self.client_player.realizer.clear()
 
+        room_pos = self.client_player.room.pos
+        self.client_player.pos.x = room_pos.x + 640
+        self.client_player.pos.y = room_pos.y + 360
+
         self.udp_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.udp_socket.setblocking(False)
-
         server_req = {
             "action": "udp_request"
         }
         server_req_bin = pickle.dumps(server_req)
         self.udp_socket.sendto(server_req_bin, self.server_address)
-        print(f"host: {self.server_address[0]}, port: {self.server_address[1]}")
+        # print(f"host: {self.server_address[0]}, port: {self.server_address[1]}")
+
         self.Connect((self.server_address[0], self.server_address[1]))
         self.send_username()
         self.last_pong = time.time()
@@ -74,6 +78,17 @@ class NetClient(ConnectionListener):
     def Network_init(self, data):
         self.my_id = data["id"]
         print(f"Connected as Player {self.my_id}")
+
+        room_pos = self.client_player.room.pos
+
+        # Preserving position in room between servers
+        old_rel_x = data["old_room_rel_pos_x"]
+        old_rel_y = data["old_room_rel_pos_y"]
+        if old_rel_x is not None:
+            self.client_player.pos.x = room_pos.x + old_rel_x
+        if old_rel_y is not None:
+            self.client_player.pos.y = room_pos.y + old_rel_y
+
         self.connected = True
 
     def Network_pong(self, data):

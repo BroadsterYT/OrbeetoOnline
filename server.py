@@ -98,7 +98,7 @@ class OrbeetoServer(Server):
             self.players[channel.id] = channel
 
             self.next_player_id += 1
-            channel.Send({"action": "init", "id": channel.id})
+            channel.Send({"action": "init", "id": channel.id, "old_room_rel_pos_x": None, "old_room_rel_pos_y": None})
             print(f"New player with IP {channel.ip} connected.")
 
         else:  # Player has joined server before
@@ -108,7 +108,12 @@ class OrbeetoServer(Server):
             self.players[channel.id] = channel
 
             del self.disconnected_players[addr[0]]
-            channel.Send({"action": "init", "id": channel.id})
+            channel.Send({
+                "action": "init",
+                "id": channel.id,
+                "old_room_rel_pos_x": channel.state["x"],
+                "old_room_rel_pos_y": channel.state["y"]
+            })
             print(f"Player with IP {channel.ip} has reconnected.")
 
     def _build_room(self, room_x, room_y):
