@@ -97,7 +97,6 @@ class NetClient(ConnectionListener):
 
     def Network_update_players(self, data):
         if self.my_id is not None:
-            #is this needed?(I only added it after adding username and everything was working fine before but I dont know where players is being updated with the new values instead.)
             self.players = data["players"]
             self.client_player.hp = self.players[self.my_id]["hp"]
 

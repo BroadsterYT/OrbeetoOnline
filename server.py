@@ -27,7 +27,8 @@ class PlayerChannel(Channel):
             "hp": 50,
             "hit_w": 32,
             "hit_h": 32,
-            "username": None
+            "username": None,
+            "lobby_mode": False
         }
 
     def Network_set_username(self, data):
@@ -327,6 +328,9 @@ class OrbeetoServer(Server):
             portal["y"] = portal["landed_on"]["y"] + portal["offset_y"]
 
         self.broadcast()
+
+    def _get_num_unique_players(self) -> int:
+        return len(self.players) + len(self.disconnected_players)
 
     def _handle_player_teleport(self, player_id, player):
         player_hitbox = pygame.Rect(

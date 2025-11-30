@@ -85,7 +85,7 @@ Join_game_back_button = menus.MenuButton(gs.s_join_game, cst.WINWIDTH // 2, 550,
                                          gs.gamestack.pop)
 
 
-#join local game
+# join local game
 def join_local_game_back_button():
     gs.gamestack.pop()
     gs.s_join_local_game.all_sprites.remove(establish_connection_failed_message)
