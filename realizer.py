@@ -54,11 +54,11 @@ class ServerRealizer:
         return vessel
 
     def realize_players(self):
-        print(self.local_players)
+        # print(self.local_players)
         for pid, player in self.net.players.items():
             if pid not in self.local_players:
                 if pid != self.net.my_id:
-                    print("Drawing new player sprite")
+                    # print("Drawing new player sprite")
                     self.local_players[pid] = self._create_vessel(
                         "sprites/orbeeto/orbeeto.png",
                         5,
@@ -74,14 +74,18 @@ class ServerRealizer:
                 self.local_players[pid].pos = vec(player["x"] + self.room.pos.x, player["y"] + self.room.pos.y)
                 self.local_players[pid].render_images()
                 self.local_players[pid].center_rects()
+                if player["hp"] <= 0:
+                    print(f"Player with ID {pid} has died and will no longer be shown")
+                    self.local_players[pid].in_gamestate = False
+                    del self.local_players[pid]
 
-            #draws a username label over everyone's character
+            # draws a username label over everyone's character
             if pid != self.net.my_id:
                 username = player["username"]
                 text.draw_text(f"{username}", player["x"] + self.room.pos.x - 24, player["y"]  + self.room.pos.y - 60, 18)
 
         for p_tup in [tup for tup in self.local_players.items() if tup[0] not in self.net.players.keys()]:
-            p_tup[1].in_gamestate = False
+            p_tup[1].remove_from_gamestate()
             del self.local_players[p_tup[0]]
 
     def realize_bullets(self):
@@ -152,7 +156,7 @@ class ServerRealizer:
                 self.local_portals[pid].center_rects()
 
         for p_tup in [tup for tup in self.local_portals.items() if tup[0] not in self.net.portals.keys()]:
-            p_tup[1].in_gamestate = False
+            p_tup[1].remove_from_gamestate()
 
     def realize_walls(self):
         for wall_id, wall in self.net.walls.items():
@@ -168,3 +172,15 @@ class ServerRealizer:
             else:
                 self.local_walls[wall_id].pos = vec(wall["x"] + self.room.pos.x, wall["y"] + self.room.pos.y)
                 self.local_walls[wall_id].center_rects()
+
+    def clear(self):
+        """
+        Removes all player instances from the realizer
+        """
+        player_ids_to_delete = []
+        for player_id, sprite in self.local_players.items():
+            sprite.remove_from_gamestate()
+            player_ids_to_delete.append(player_id)
+
+        for player_id in player_ids_to_delete:
+            del self.local_players[player_id]

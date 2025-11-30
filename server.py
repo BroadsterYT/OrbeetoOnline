@@ -374,6 +374,9 @@ class OrbeetoServer(Server):
             if not bullet_hitbox.colliderect(player_hitbox):
                 continue
 
+            if player["hp"] <= 0:
+                continue
+
             # Intentional: let players take damage from own bullets
             if b_data["bullet_type"] != "portal_bullet":
                 player["hp"] -= 1

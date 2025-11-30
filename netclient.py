@@ -40,6 +40,10 @@ class NetClient(ConnectionListener):
 
     def establish_connection(self):
         # resetting player conditions
+        self.client_player.hp = 50
+        self.client_player.health_bar.add_to_gamestate()
+        self.client_player.gun_heat = 0
+        self.client_player.realizer.clear()
 
         self.udp_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.udp_socket.setblocking(False)
