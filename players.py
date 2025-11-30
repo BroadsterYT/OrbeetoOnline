@@ -489,11 +489,11 @@ class Player(cb.ActorBase):
                 groups.all_font_chars.add(
                     text.IndicatorText(self.pos.x, self.pos.y - 32, f'{math.ceil(0.02 * self.max_hp)}')
                 )
-        else:
-            self._passive_hp_regen()
+        # else:
+        #     self._passive_hp_regen()
 
-        if self.hp <= 0:
-            self.kill()
+        if self.hp <= 0:  # Don't kill player but remove health bar
+            self.health_bar.remove_from_gamestate()
 
         self.net.send_move(
             self.pos.x - self.room.pos.x,

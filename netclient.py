@@ -14,7 +14,6 @@ from servermanager import servermanager
 import screen
 
 PING_INTERVAL = 2
-#changed this from 1 to 6
 PING_TIMEOUT = 6
 
 
@@ -37,10 +36,11 @@ class NetClient(ConnectionListener):
 
         self.connection_lost_header = None
 
-        # self.Connect((host, port))
         print(f"Hooked to Player on {host} with port {port}")
 
     def establish_connection(self):
+        # resetting player conditions
+
         self.udp_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.udp_socket.setblocking(False)
 

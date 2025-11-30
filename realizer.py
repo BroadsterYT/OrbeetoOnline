@@ -54,9 +54,11 @@ class ServerRealizer:
         return vessel
 
     def realize_players(self):
+        print(self.local_players)
         for pid, player in self.net.players.items():
             if pid not in self.local_players:
                 if pid != self.net.my_id:
+                    print("Drawing new player sprite")
                     self.local_players[pid] = self._create_vessel(
                         "sprites/orbeeto/orbeeto.png",
                         5,
@@ -72,14 +74,15 @@ class ServerRealizer:
                 self.local_players[pid].pos = vec(player["x"] + self.room.pos.x, player["y"] + self.room.pos.y)
                 self.local_players[pid].render_images()
                 self.local_players[pid].center_rects()
+
             #draws a username label over everyone's character
             if pid != self.net.my_id:
                 username = player["username"]
                 text.draw_text(f"{username}", player["x"] + self.room.pos.x - 24, player["y"]  + self.room.pos.y - 60, 18)
 
-
         for p_tup in [tup for tup in self.local_players.items() if tup[0] not in self.net.players.keys()]:
             p_tup[1].in_gamestate = False
+            del self.local_players[p_tup[0]]
 
     def realize_bullets(self):
         for bid, bullet in self.net.bullets.items():
@@ -124,6 +127,7 @@ class ServerRealizer:
         # Destroy realization when server says bullet is dead
         for b_tup in [tup for tup in self.local_bullets.items() if tup[0] not in self.net.bullets.keys()]:
             b_tup[1].remove_from_gamestate()
+            del self.local_bullets[b_tup[0]]
 
     def realize_portals(self):
         for pid, portal in self.net.portals.items():
