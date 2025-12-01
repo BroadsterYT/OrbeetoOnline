@@ -74,7 +74,7 @@ class ServerRealizer:
                 self.local_players[pid].center_rects()
             #draws a username label over everyone's character
             if pid != self.net.my_id:
-                username = player["username"]
+                username = str(player["username"])
                 text.draw_text(f"{username}", player["x"] + self.room.pos.x - (11 * (len(username) / 2)), player["y"]  + self.room.pos.y - 60, 18, font_family="Monospace")
 
 
