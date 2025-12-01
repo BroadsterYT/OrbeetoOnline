@@ -52,6 +52,11 @@ count = 0
 def join_game_window() -> None:
     global main_room, connecting, connection_established_time, connection_time
 
+    try:
+        gs.s_join_local_game.all_sprites.remove(establish_connection_failed_message)
+    except Exception:
+        pass
+
     main_room.player1.net.server_address = (main_room.player1.get_ip_input(), 12345)
     main_room.player1.net.establish_connection()
 
@@ -92,7 +97,7 @@ def join_local_game_back_button():
 
 join_game_header = Header("Join locally hosted Game", pos=(cst.WINWIDTH // 2 - 230, 200), font_size=55, color=(250, 0, 0))
 IPAddress_header = Header("Host IP Address:", pos=(cst.WINWIDTH // 2 - 150, 300), font_size=30, color=(0, 0, 100))
-input_box_IP = menus.InputBox(gs.s_join_local_game, cst.WINWIDTH // 2 - 150, 320, 300, 35, 'IPAddressInput')
+input_box_IP = menus.InputBox(gs.s_join_local_game, cst.WINWIDTH // 2 - 150, 320, 300, 35, 'IPAddressInput', character_limit=15)
 Username_header = Header("Username:", pos=(cst.WINWIDTH // 2 - 150, 380), font_size=30, color=(0, 0, 100))
 input_box_username = menus.InputBox(gs.s_join_local_game, cst.WINWIDTH // 2 - 150, 400, 300, 35, 'UsernameInput')
 join_game_button = menus.MenuButton(gs.s_join_local_game, cst.WINWIDTH // 2, 500, 130, 32, 'Join',
