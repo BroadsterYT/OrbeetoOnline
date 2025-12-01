@@ -127,19 +127,16 @@ def start_server():
 server_settings_header = Header("Server settings", pos=(cst.WINWIDTH // 2 - 145, 150), font_size=55, color=(250, 0, 0))
 
 server_settings_1_header = Header("Game duration (in min):", pos=(cst.WINWIDTH // 2 - 165, 280), font_size=30, color=(0, 0, 100))
-server_settings_1_input_box = menus.InputBox(gs.s_server_settings, cst.WINWIDTH // 2 - 150, 300, 300, 35, 'Server-Settings-1', 2)
+server_settings_1_input_box = menus.InputBox(gs.s_server_settings, cst.WINWIDTH // 2 - 150, 300, 300, 35, 'Server-Settings-1', 2, "5","integer")
 
 server_settings_2_header = Header("Max num of players:", pos=(cst.WINWIDTH // 2 - 165, 360), font_size=30, color=(0, 0, 100))
-server_settings_2_input_box = menus.InputBox(gs.s_server_settings, cst.WINWIDTH // 2 - 150, 380, 300, 35, 'Server-Settings-2', 1)
-
-server_settings_3_header = Header("Something:", pos=(cst.WINWIDTH // 2 - 165, 440), font_size=30, color=(0, 0, 100))
-server_settings_3_input_box = menus.InputBox(gs.s_server_settings, cst.WINWIDTH // 2 - 150, 460, 300, 35, 'Server-Settings-3')
+server_settings_2_input_box = menus.InputBox(gs.s_server_settings, cst.WINWIDTH // 2 - 150, 380, 300, 35, 'Server-Settings-2', 1, "2", "integer")
 
 start_server = menus.MenuButton(gs.s_server_settings, cst.WINWIDTH // 2, 575, 380, 32, 'Start Server',
                                             start_server)
 server_settings_return_button = menus.MenuButton(gs.s_server_settings, cst.WINWIDTH // 2, 630, 200, 32, 'Return',
                                             gs.gamestack.pop)
-gs.s_server_settings.all_sprites.add(server_settings_header, server_settings_1_header, server_settings_2_header, server_settings_3_header)
+gs.s_server_settings.all_sprites.add(server_settings_header, server_settings_1_header, server_settings_2_header)
 # Pause menu
 pause_menu = menus.PauseMenu()
 pause_menu.net_ref = main_room.player1.net
@@ -293,7 +290,6 @@ async def handle_events(events_to_handle) -> None:
         if gs.gamestack.stack[-1] == gs.s_server_settings:
             server_settings_1_input_box.update(event)
             server_settings_2_input_box.update(event)
-            server_settings_3_input_box.update(event)
 
         check_mouse_scroll(event)
 

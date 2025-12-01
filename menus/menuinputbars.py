@@ -7,7 +7,7 @@ import text
 arr = []
 
 class InputBox(cb.ActorBase):
-    def __init__(self, gamestate: gs.GameState, x, y, width, height, name= "", character_limit= 20, initial_text=""):
+    def __init__(self, gamestate: gs.GameState, x, y, width, height, name= "", character_limit= 20, initial_text="", input_type= None):
         """
         when creating an object of this class you need to make sure you call its update method on the event handler and
         pass the event with it (look at other implementations).
@@ -38,6 +38,7 @@ class InputBox(cb.ActorBase):
         self.color_active = pygame.Color('dodgerblue2')
         self.border_color = self.color_inactive
         self.text_color = pygame.Color('black')
+        self.input_type = input_type
         self.active = False
         self.character_limit = character_limit
         self.character_limit_flag = False
@@ -71,7 +72,14 @@ class InputBox(cb.ActorBase):
 
             else:
                 if len(self.text) < self.character_limit:
-                    self.text += event.unicode
+                    if self.input_type == "integer":
+                        if (event.unicode.isdigit()) and ((self.text + event.unicode) != "0"):
+                            self.text += event.unicode
+                        else:
+                            print("Non integer input!")
+                    else:
+                        self.text += event.unicode
+
                 else:
                     self.character_limit_flag = True
                     print("Error: limited character amount reached")
