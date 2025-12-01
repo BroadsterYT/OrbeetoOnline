@@ -75,7 +75,7 @@ class ServerRealizer:
             #draws a username label over everyone's character
             if pid != self.net.my_id:
                 username = player["username"]
-                text.draw_text(f"{username}", player["x"] + self.room.pos.x - 24, player["y"]  + self.room.pos.y - 60, 18)
+                text.draw_text(f"{username}", player["x"] + self.room.pos.x - (11 * (len(username) / 2)), player["y"]  + self.room.pos.y - 60, 18, font_family="Monospace")
 
 
         for p_tup in [tup for tup in self.local_players.items() if tup[0] not in self.net.players.keys()]:
