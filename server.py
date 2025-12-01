@@ -94,8 +94,10 @@ class OrbeetoServer(Server):
         "text": f"{username} joined the game!"
         })
 
+
+
     def sendToAll(self, message):
-        for c in self.connections.values():
+        for clinet in self.players.values():
             c.Send(message)
 
     def _build_room(self, room_x, room_y):
