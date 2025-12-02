@@ -154,6 +154,17 @@ start_server = menus.MenuButton(gs.s_server_settings, cst.WINWIDTH // 2, 575, 38
 server_settings_return_button = menus.MenuButton(gs.s_server_settings, cst.WINWIDTH // 2, 630, 200, 32, 'Return',
                                             gs.gamestack.pop)
 gs.s_server_settings.all_sprites.add(server_settings_header, server_settings_1_header, server_settings_2_header, Server_IPAddress_label_Header)
+
+
+def return_from_win():
+    servermanager.stop()
+    gs.gamestack.pop()
+    gs.gamestack.push(gs.s_startup)
+
+# Win Condition
+return_menu = menus.MenuButton(gs.s_game_win, cst.WINWIDTH // 2, 575, 380, 32, "Return to Menu", return_from_win)
+gs.s_game_win.all_sprites.add(return_menu)
+
 # Pause menu
 pause_menu = menus.PauseMenu()
 pause_menu.net_ref = main_room.player1.net
