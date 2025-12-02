@@ -84,6 +84,8 @@ class NetClient(ConnectionListener):
         for box in arr:
             if box.name == "UsernameInput":
                 username = box.get_text()
+        if username == "":
+            username = "anonymous"
         print("username: ", username)
 
         connection.Send({
