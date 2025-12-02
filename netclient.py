@@ -14,6 +14,7 @@ from servermanager import servermanager
 import gamestack
 
 import screen
+from menus.StartUpmenu import Header
 
 PING_INTERVAL = 2
 PING_TIMEOUT = 6
@@ -235,6 +236,8 @@ class NetClient(ConnectionListener):
 
     def Network_game_end(self, data):
         self.handle_timeout()
+        header = Header(f"{data['winner']} won!", pos=(cst.WINWIDTH // 2 - 260, 180), color=(0, 130, 0))
+        gs.s_game_win.all_sprites.add(header)
         gs.gamestack.push(gs.s_game_win)
 
     def Pre_game_pump(self):
