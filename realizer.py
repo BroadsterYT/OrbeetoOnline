@@ -76,13 +76,13 @@ class ServerRealizer:
                 self.local_players[pid].center_rects()
                 if player["hp"] <= 0:
                     # print(f"Player with ID {pid} has died and will no longer be shown")
-                    self.local_players[pid].in_gamestate = False
+                    self.local_players[pid].remove_from_gamestate()
                     del self.local_players[pid]
 
             # draws a username label over everyone's character
             if pid != self.net.my_id:
                 username = str(player["username"])
-                text.draw_text(f"{username}", player["x"] + self.room.pos.x - (11 * (len(username) / 2)), player["y"]  + self.room.pos.y - 60, 18, font_family="Monospace")
+                text.draw_text(f"{username}", player["x"] + self.room.pos.x - (11 * (len(username) / 2)), player["y"] + self.room.pos.y - 60, 18, font_family="Monospace")
 
         for p_tup in [tup for tup in self.local_players.items() if tup[0] not in self.net.players.keys()]:
             p_tup[1].remove_from_gamestate()

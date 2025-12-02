@@ -11,6 +11,7 @@ from menus.menuinputbars import arr
 
 import gamestack as gs
 from servermanager import servermanager
+import gamestack
 
 import screen
 
@@ -232,6 +233,10 @@ class NetClient(ConnectionListener):
     def Network_update_walls(self, data):
         self.walls = data["walls"]
 
+    def Network_game_end(self, data):
+        print("Winner!")
+        gs.gamestack.push(gs.s_game_win)
+
     def Pre_game_pump(self):
         try:
             connection.Pump()
@@ -275,6 +280,7 @@ class NetClient(ConnectionListener):
     def handle_timeout(self):
         servermanager.stop()
         self.connected = False
+
         gs.gamestack.push(gs.s_startup)
         gs.s_startup.all_sprites.add(self.connection_lost_header)
 

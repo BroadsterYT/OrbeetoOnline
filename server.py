@@ -88,6 +88,7 @@ class OrbeetoServer(Server):
         self._build_room(0, 0)
 
         self.lobby_mode = True
+        self.game_over = False
 
     def Connected(self, channel, addr):
         # Check if player has connected before
@@ -343,9 +344,23 @@ class OrbeetoServer(Server):
             self._exit_lobby_mode()
 
         # Win condition
-        print(self._get_num_alive_players())
-        if not self.lobby_mode and self._get_num_alive_players() == 1:
-            print("Last man standing!")
+        if not self.lobby_mode and not self.game_over and self._get_num_alive_players() == 1:
+            self.game_over = True
+            self._declare_winner()
+
+    def _declare_winner(self):
+        winner = ""
+        for ch in self.players.values():
+            if ch.state["hp"] > 0:
+                winner = ch.state["username"]
+
+        print(f"Winner is: {winner}")
+        game_end = {
+            "action": "game_end",
+            "winner": winner
+        }
+        for client in self.players.values():
+            client.Send(game_end)
 
     def _exit_lobby_mode(self):
         self.lobby_mode = False
