@@ -75,7 +75,7 @@ class ServerRealizer:
                 self.local_players[pid].render_images()
                 self.local_players[pid].center_rects()
                 if player["hp"] <= 0:
-                    print(f"Player with ID {pid} has died and will no longer be shown")
+                    # print(f"Player with ID {pid} has died and will no longer be shown")
                     self.local_players[pid].in_gamestate = False
                     del self.local_players[pid]
 

@@ -308,10 +308,6 @@ class OrbeetoServer(Server):
         for pid, ch in self.players.items():
             self._handle_player_teleport(pid, ch.state)
 
-        #server settings
-        if self.server_setting_player_number is not None:
-            print(self.server_setting_player_number)
-
         to_destroy = []  # Bullets to destroy after iteration
         for bid, b in self.bullets.items():
             b["x"] += b["vel_x"] * 0.75
@@ -340,11 +336,18 @@ class OrbeetoServer(Server):
 
         self.broadcast()
 
-        # if self.lobby_mode and self._get_num_unique_players() < self._get_max_players_allowed():
-        #     self._exit_lobby_mode()
+        if self.server_setting_player_number is None:
+            return
+
+        if self.lobby_mode and self._get_num_unique_players() >= int(self.server_setting_player_number):
+            self._exit_lobby_mode()
+
+        # Win condition
+        print(self._get_num_alive_players())
+        if not self.lobby_mode and self._get_num_alive_players() == 1:
+            print("Last man standing!")
 
     def _exit_lobby_mode(self):
-        print("exit lobby mode")
         self.lobby_mode = False
         for pid, ch in self.players.items():
             ch.state["lobby_mode"] = False
@@ -353,6 +356,13 @@ class OrbeetoServer(Server):
 
     def _get_num_unique_players(self) -> int:
         return len(self.players) + len(self.disconnected_players)
+
+    def _get_num_alive_players(self) -> int:
+        count = 0
+        for pid, ch in self.players.items():
+            if ch.state["hp"] > 0:
+                count += 1
+        return count
 
     def _handle_player_teleport(self, player_id, player):
         player_hitbox = pygame.Rect(
