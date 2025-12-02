@@ -77,6 +77,15 @@ class NetClient(ConnectionListener):
         print(f"host: {self.server_address[0]}, port: {self.server_address[1]}")
         self.Connect((self.server_address[0], self.server_address[1]))
         self.send_username()
+
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        try:
+            s.connect(('8.8.8.8', 80))
+            if host == "localhost" or host == s.getsockname()[0]:
+                self.send_server_settings()
+        finally:
+            s.close()
+
         self.last_pong = time.time()
 
     def send_username(self):
@@ -92,6 +101,18 @@ class NetClient(ConnectionListener):
             "action": "set_username",
             "id": self.my_id,
             "username": username
+        })
+
+    def send_server_settings(self):
+        setting = "1"
+        for box in arr:
+            if box.name == "Server-Settings-2":
+                setting = box.get_text()
+
+        connection.Send({
+            "action": "set_server_settings",
+            "id": self.my_id,
+            "setting": setting
         })
 
     def Network_init(self, data):

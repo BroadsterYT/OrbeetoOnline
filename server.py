@@ -30,6 +30,8 @@ class PlayerChannel(Channel):
             "username": None,
             "lobby_mode": False
         }
+    def Network_set_server_settings(self, data):
+        self._server.server_setting_player_number = data["setting"]
 
     def Network_set_username(self, data):
         self.state["username"] = data["username"]
@@ -76,6 +78,7 @@ class OrbeetoServer(Server):
 
         self.disconnected_players = {}  # {ip: disconnect_data}
                                         # disconnect_data = { old_id, ip, channel.state}
+        self.server_setting_player_number = None
 
         self.next_player_id = 0
         self.next_bullet_id = 0
@@ -300,6 +303,10 @@ class OrbeetoServer(Server):
         # TCP Sending/Receiving
         for pid, ch in self.players.items():
             self._handle_player_teleport(pid, ch.state)
+
+        #server settings
+        if self.server_setting_player_number is not None:
+            print(self.server_setting_player_number)
 
         to_destroy = []  # Bullets to destroy after iteration
         for bid, b in self.bullets.items():
