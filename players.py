@@ -328,6 +328,8 @@ class Player(cb.ActorBase):
         for box in arr:
             if box.name == 'UsernameInput':
                 username = box.get_text()
+                if username == "":
+                    username = "anonymous"
                 text.draw_text(username, self.pos.x - (11 * (len(username) / 2)), self.pos.y - 60, 18, "Monospace")
 
     def is_swinging(self) -> bool:
