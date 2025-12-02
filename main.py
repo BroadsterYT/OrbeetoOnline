@@ -11,6 +11,7 @@ import controls as ctrl
 import menus
 import screen
 import text
+import socket
 
 import constants as cst
 import gamestack as gs
@@ -95,18 +96,19 @@ def join_local_game_back_button():
     gs.gamestack.pop()
     gs.s_join_local_game.all_sprites.remove(establish_connection_failed_message)
 
-join_game_header = Header("Join locally hosted Game", pos=(cst.WINWIDTH // 2 - 230, 200), font_size=55, color=(250, 0, 0))
-IPAddress_header = Header("Host IP Address:", pos=(cst.WINWIDTH // 2 - 150, 300), font_size=30, color=(0, 0, 100))
-input_box_IP = menus.InputBox(gs.s_join_local_game, cst.WINWIDTH // 2 - 150, 320, 300, 35, 'IPAddressInput', character_limit=15)
-Username_header = Header("Username:", pos=(cst.WINWIDTH // 2 - 150, 380), font_size=30, color=(0, 0, 100))
-input_box_username = menus.InputBox(gs.s_join_local_game, cst.WINWIDTH // 2 - 150, 400, 300, 35, 'UsernameInput')
+join_game_header = Header("Join locally hosted Game", pos=(cst.WINWIDTH // 2 - 230, 160), font_size=55, color=(250, 0, 0))
+IPAddress_header = Header("Host IP Address:", pos=(cst.WINWIDTH // 2 - 150, 260), font_size=30, color=(0, 0, 100))
+input_box_IP = menus.InputBox(gs.s_join_local_game, cst.WINWIDTH // 2 - 150, 280, 300, 35, 'IPAddressInput', character_limit=15)
+Username_header = Header("Username:", pos=(cst.WINWIDTH // 2 - 150, 340), font_size=30, color=(0, 0, 100))
+input_box_username = menus.InputBox(gs.s_join_local_game, cst.WINWIDTH // 2 - 150, 360, 300, 35, 'UsernameInput')
+Local_Server_IPAddress_Header = Header("Server IP:", pos=(cst.WINWIDTH // 2 - 150, 410), font_size=25, color=(0, 0, 100))
 join_game_button = menus.MenuButton(gs.s_join_local_game, cst.WINWIDTH // 2, 500, 130, 32, 'Join',
                                                 join_game_window)
 join_local_game_back_button = menus.MenuButton(gs.s_join_local_game, cst.WINWIDTH // 2, 550, 130, 32, 'Back',
                                          join_local_game_back_button)
 establish_connection_failed_message = Header("Connection failed!", pos=(cst.WINWIDTH // 2 - 90, 440), font_size=30, color=(250, 0, 0))
 
-gs.s_join_local_game.all_sprites.add(join_game_header, IPAddress_header, Username_header)
+gs.s_join_local_game.all_sprites.add(join_game_header, IPAddress_header, Username_header, Local_Server_IPAddress_Header)
 
 
 #leaving the game confirmation window
@@ -132,11 +134,13 @@ server_settings_1_input_box = menus.InputBox(gs.s_server_settings, cst.WINWIDTH 
 server_settings_2_header = Header("Max num of players:", pos=(cst.WINWIDTH // 2 - 165, 360), font_size=30, color=(0, 0, 100))
 server_settings_2_input_box = menus.InputBox(gs.s_server_settings, cst.WINWIDTH // 2 - 150, 380, 300, 35, 'Server-Settings-2', 1, "2", "integer")
 
+Server_IPAddress_label_Header = Header("IP Address:", pos=(cst.WINWIDTH // 2 - 165, 440), font_size=23, color=(0, 0, 100))
+
 start_server = menus.MenuButton(gs.s_server_settings, cst.WINWIDTH // 2, 575, 380, 32, 'Start Server',
                                             start_server)
 server_settings_return_button = menus.MenuButton(gs.s_server_settings, cst.WINWIDTH // 2, 630, 200, 32, 'Return',
                                             gs.gamestack.pop)
-gs.s_server_settings.all_sprites.add(server_settings_header, server_settings_1_header, server_settings_2_header)
+gs.s_server_settings.all_sprites.add(server_settings_header, server_settings_1_header, server_settings_2_header, Server_IPAddress_label_Header)
 # Pause menu
 pause_menu = menus.PauseMenu()
 pause_menu.net_ref = main_room.player1.net
@@ -196,6 +200,28 @@ async def main(max_frame_rate) -> None:
             text.draw_text(f'{pow(screen.dt, -1)}', 0, 0)
         except ZeroDivisionError:
             pass
+
+        if gs.gamestack.stack[-1] == s_server_settings:
+            if servermanager.proc is not None:
+                s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+                try:
+                    s.connect(('8.8.8.8', 80))
+                    text.draw_text(f'{s.getsockname()[0]}', cst.WINWIDTH // 2 - 75, 438, 15, "Arial", color=(0, 0, 255))
+                finally:
+                    s.close()
+            else:
+                text.draw_text(f'Currently no server running..', cst.WINWIDTH // 2 - 75, 438, 15, "Arial", color=(0, 0, 255))
+        elif gs.gamestack.stack[-1] == gs.s_join_local_game:
+            if servermanager.proc is not None:
+                s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+                try:
+                    s.connect(('8.8.8.8', 80))
+                    text.draw_text(f'{s.getsockname()[0]}', cst.WINWIDTH // 2 - 65, 408, 17, "Arial", color=(200, 0, 0))
+                finally:
+                    s.close()
+            else:
+                text.draw_text(f'You currently have no server running!', cst.WINWIDTH // 2 - 65, 408, 17, "Arial", color=(200, 0, 0))
+
 
         global connecting, count, connection_time
         if connecting:
