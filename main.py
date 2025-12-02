@@ -157,9 +157,9 @@ gs.s_server_settings.all_sprites.add(server_settings_header, server_settings_1_h
 
 
 def return_from_win():
-    servermanager.stop()
+    global main_room
     gs.gamestack.pop()
-    gs.gamestack.push(gs.s_startup)
+
 
 # Win Condition
 return_menu = menus.MenuButton(gs.s_game_win, cst.WINWIDTH // 2, 575, 380, 32, "Return to Menu", return_from_win)
