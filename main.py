@@ -28,7 +28,7 @@ pygame.display.set_icon(pygame.image.load(os.path.join(os.getcwd(), 'other/orbee
 
 screen.buffer_screen = pygame.Surface((cst.WINWIDTH, cst.WINHEIGHT))
 screen.viewport = pygame.display.set_mode((cst.WINWIDTH, cst.WINHEIGHT),
-                                           pygame.HWSURFACE | pygame.SCALED | pygame.DOUBLEBUF)
+                                          pygame.HWSURFACE | pygame.SCALED | pygame.DOUBLEBUF)
 
 
 def redraw_game_window() -> None:
@@ -43,12 +43,14 @@ def redraw_game_window() -> None:
 
     screen.buffer_screen.fill((0, 255, 255))
 
+
 main_room = rooms.Room(0, 0)
 gs.s_action.groups.append(main_room)
 connecting = False
 connection_established_time = 0.0
 connection_time = 0.0
 count = 0
+
 
 def join_game_window() -> None:
     global main_room, connecting, connection_established_time, connection_time
@@ -72,13 +74,15 @@ def play_game_button() -> None:
     gs.gamestack.push(gs.s_join_game)
     gs.s_startup.all_sprites.remove(ServerConnection_failed_message)
 
+
 header = Header("Welcome to Orbeeto!", pos=(cst.WINWIDTH // 2 - 260, 180), color=(0, 130, 0))
 message = Header("press 'Esc' for settings", pos=(cst.WINWIDTH // 2 - 120, 250), font_size=30, color=(250, 0, 0))
 PlayGame_button = menus.MenuButton(gs.s_startup, cst.WINWIDTH // 2, 475, 286, 32, 'Play Game',
                                    play_game_button)
 end_game_button = menus.MenuButton(gs.s_startup, cst.WINWIDTH // 2, 550, 322, 32, 'Leave Game',
-                                            sys.exit)
-ServerConnection_failed_message = Header("Lost connection to server!", pos=(cst.WINWIDTH // 2 - 240, 340), font_size=55, color=(250, 0, 0))
+                                   sys.exit)
+ServerConnection_failed_message = Header("Lost connection to server!", pos=(cst.WINWIDTH // 2 - 240, 340), font_size=55,
+                                         color=(250, 0, 0))
 main_room.player1.net.connection_lost_header = ServerConnection_failed_message
 gs.s_startup.all_sprites.add(header, message)
 
@@ -103,41 +107,50 @@ Username_header = Header("Username:", pos=(cst.WINWIDTH // 2 - 150, 340), font_s
 input_box_username = menus.InputBox(gs.s_join_local_game, cst.WINWIDTH // 2 - 150, 360, 300, 35, 'UsernameInput')
 Local_Server_IPAddress_Header = Header("Server IP:", pos=(cst.WINWIDTH // 2 - 150, 410), font_size=25, color=(0, 0, 100))
 join_game_button = menus.MenuButton(gs.s_join_local_game, cst.WINWIDTH // 2, 500, 130, 32, 'Join',
-                                                join_game_window)
+                                    join_game_window)
 join_local_game_back_button = menus.MenuButton(gs.s_join_local_game, cst.WINWIDTH // 2, 550, 130, 32, 'Back',
-                                         join_local_game_back_button)
-establish_connection_failed_message = Header("Connection failed!", pos=(cst.WINWIDTH // 2 - 90, 440), font_size=30, color=(250, 0, 0))
+                                               join_local_game_back_button)
+establish_connection_failed_message = Header("Connection failed!", pos=(cst.WINWIDTH // 2 - 90, 440), font_size=30,
+                                             color=(250, 0, 0))
 
 gs.s_join_local_game.all_sprites.add(join_game_header, IPAddress_header, Username_header, Local_Server_IPAddress_Header)
 
+# leaving the game confirmation window
+quit_return_button = menus.MenuButton(gs.s_confirm_quit, cst.WINWIDTH // 2, cst.WINHEIGHT // (11 / 8), 190, 32,
+                                      'Return',
+                                      gs.gamestack.replace, gs.s_confirm_quit, gs.s_pause)
 
-#leaving the game confirmation window
-quit_return_button = menus.MenuButton(gs.s_confirm_quit, cst.WINWIDTH // 2, cst.WINHEIGHT // (11/8), 190, 32, 'Return',
-                                                 gs.gamestack.replace, gs.s_confirm_quit, gs.s_pause)
-
-confirm_quit_button = menus.MenuButton(gs.s_confirm_quit, cst.WINWIDTH // 2, cst.WINHEIGHT // (5/4), 126, 32, 'Quit', sys.exit)
-quit_game_header = Header("Are you sure you want to leave?", pos=(cst.WINWIDTH // 2 - 310, 250), font_size=60, color=(250, 0, 0))
+confirm_quit_button = menus.MenuButton(gs.s_confirm_quit, cst.WINWIDTH // 2, cst.WINHEIGHT // (5 / 4), 126, 32, 'Quit',
+                                       sys.exit)
+quit_game_header = Header("Are you sure you want to leave?", pos=(cst.WINWIDTH // 2 - 310, 250), font_size=60,
+                          color=(250, 0, 0))
 
 gs.s_confirm_quit.all_sprites.add(quit_game_header)
 
-# server settings submenue
+
+# server settings submenu
 def start_server():
     servermanager.start()
     gs.gamestack.pop()
     gs.gamestack.push(gs.s_join_local_game)
 
+
 server_settings_header = Header("Server settings", pos=(cst.WINWIDTH // 2 - 145, 150), font_size=55, color=(250, 0, 0))
 
-server_settings_1_header = Header("Game duration (in min):", pos=(cst.WINWIDTH // 2 - 165, 280), font_size=30, color=(0, 0, 100))
-server_settings_1_input_box = menus.InputBox(gs.s_server_settings, cst.WINWIDTH // 2 - 150, 300, 300, 35, 'Server-Settings-1', 2, "5","integer")
+server_settings_1_header = Header("Game duration (in min):", pos=(cst.WINWIDTH // 2 - 165, 280), font_size=30,
+                                  color=(0, 0, 100))
+server_settings_1_input_box = menus.InputBox(gs.s_server_settings, cst.WINWIDTH // 2 - 150, 300, 300, 35,
+                                             'Server-Settings-1', 2, "5", "integer")
 
-server_settings_2_header = Header("Max num of players:", pos=(cst.WINWIDTH // 2 - 165, 360), font_size=30, color=(0, 0, 100))
-server_settings_2_input_box = menus.InputBox(gs.s_server_settings, cst.WINWIDTH // 2 - 150, 380, 300, 35, 'Server-Settings-2', 1, "2", "integer")
+server_settings_2_header = Header("Max num of players:", pos=(cst.WINWIDTH // 2 - 165, 360), font_size=30,
+                                  color=(0, 0, 100))
+server_settings_2_input_box = menus.InputBox(gs.s_server_settings, cst.WINWIDTH // 2 - 150, 380, 300, 35,
+                                             'Server-Settings-2', 1, "2", "integer")
 
 Server_IPAddress_label_Header = Header("IP Address:", pos=(cst.WINWIDTH // 2 - 165, 440), font_size=23, color=(0, 0, 100))
 
 start_server = menus.MenuButton(gs.s_server_settings, cst.WINWIDTH // 2, 575, 380, 32, 'Start Server',
-                                            start_server)
+                                start_server)
 server_settings_return_button = menus.MenuButton(gs.s_server_settings, cst.WINWIDTH // 2, 630, 200, 32, 'Return',
                                             gs.gamestack.pop)
 gs.s_server_settings.all_sprites.add(server_settings_header, server_settings_1_header, server_settings_2_header, Server_IPAddress_label_Header)
@@ -145,7 +158,6 @@ gs.s_server_settings.all_sprites.add(server_settings_header, server_settings_1_h
 pause_menu = menus.PauseMenu()
 pause_menu.net_ref = main_room.player1.net
 pause_release = 0
-
 
 prev_time = time.time()  # Used for delta time
 
@@ -185,7 +197,8 @@ async def main(max_frame_rate) -> None:
             pause_release = ctrl.key_released[ctrl.K_PAUSE]
             pause_menu.is_open = True
 
-        elif pause_release == ctrl.key_released[ctrl.K_PAUSE] - 1 and pause_menu.is_open and gs.s_pause in gs.gamestack.stack:
+        elif pause_release == ctrl.key_released[
+            ctrl.K_PAUSE] - 1 and pause_menu.is_open and gs.s_pause in gs.gamestack.stack:
             gs.gamestack.pop()
             pause_release = ctrl.key_released[ctrl.K_PAUSE]
             pause_menu.is_open = False
@@ -227,7 +240,7 @@ async def main(max_frame_rate) -> None:
         if connecting:
             main_room.player1.net.Pre_game_pump()
             if gs.gamestack.stack[-1] == gs.s_join_local_game:
-                if time.time()-connection_time > 0.3:
+                if time.time() - connection_time > 0.3:
                     if count < 3:
                         count += 1
                     else:
@@ -329,6 +342,7 @@ async def handle_events(events_to_handle) -> None:
         # Key release updating
         check_key_release(event, False)
         check_key_release(event, True)
+
 
 if __name__ == '__main__':
     asyncio.run(main(cst.FPS))
