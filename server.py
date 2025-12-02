@@ -18,6 +18,7 @@ class PlayerChannel(Channel):
     def __init__(self, *args, **kwargs):
         Channel.__init__(self, *args, **kwargs)
         self.id = None
+        self.ip = None
         self.state = {
             "x": 0,
             "y": 0,
@@ -26,7 +27,8 @@ class PlayerChannel(Channel):
             "hp": 50,
             "hit_w": 32,
             "hit_h": 32,
-            "username": None
+            "username": None,
+            "lobby_mode": False
         }
 
     def Network_set_username(self, data):
@@ -36,9 +38,8 @@ class PlayerChannel(Channel):
         self.Send({"action": "pong"})
 
     def Network_move(self, data):
-        if self.state["hp"] > 0:
-            self.state["x"] = data["x"]
-            self.state["y"] = data["y"]
+        self.state["x"] = data["x"]
+        self.state["y"] = data["y"]
 
     def Network_fire(self, data):
         bullet_id = self._server.spawn_bullet(
@@ -54,7 +55,7 @@ class PlayerChannel(Channel):
         return bullet_id
 
     def Close(self):
-        print(f"Player {self.id} disconnected.")
+        print(f"Player at IP {self.ip} disconnected.")
         self._server.remove_player(self)
 
 
@@ -68,10 +69,13 @@ class OrbeetoServer(Server):
         self.udp_socket.bind((host, port))
         self.udp_socket.setblocking(False)
 
-        self.players = {}
+        self.players = {}  # {channel.id: channel}
         self.bullets = {}
         self.walls = {}
         self.portals = {}
+
+        self.disconnected_players = {}  # {ip: disconnect_data}
+                                        # disconnect_data = { old_id, ip, channel.state}
 
         self.next_player_id = 0
         self.next_bullet_id = 0
@@ -81,12 +85,37 @@ class OrbeetoServer(Server):
         self._build_room(0, 0)
 
     def Connected(self, channel, addr):
-        # TODO: Allow player ID's to be remembered and removed
-        channel.id = self.next_player_id
-        self.players[channel.id] = channel
-        self.next_player_id += 1
-        channel.Send({"action": "init", "id": channel.id})
-        print(f"Player {channel.id} connected.")
+        # Check if player has connected before
+        joined_before = False
+        for old_ip, old_player in self.disconnected_players.items():
+            if old_ip == addr[0]:
+                print(old_player)
+                joined_before = True
+                break
+
+        if not joined_before:
+            channel.id = self.next_player_id
+            channel.ip = addr[0]
+            self.players[channel.id] = channel
+
+            self.next_player_id += 1
+            channel.Send({"action": "init", "id": channel.id, "old_room_rel_pos_x": None, "old_room_rel_pos_y": None})
+            print(f"New player with IP {channel.ip} connected.")
+
+        else:  # Player has joined server before
+            channel.id = self.disconnected_players[addr[0]]["old_id"]
+            channel.ip = addr[0]
+            channel.state = self.disconnected_players[addr[0]]["state"]
+            self.players[channel.id] = channel
+
+            del self.disconnected_players[addr[0]]
+            channel.Send({
+                "action": "init",
+                "id": channel.id,
+                "old_room_rel_pos_x": channel.state["x"],
+                "old_room_rel_pos_y": channel.state["y"]
+            })
+            print(f"Player with IP {channel.ip} has reconnected.")
 
     def _build_room(self, room_x, room_y):
         self.walls.clear()
@@ -98,6 +127,14 @@ class OrbeetoServer(Server):
 
     def remove_player(self, channel):
         if channel.id in self.players:
+            # Saving player data in case they reconnect
+            disconnect_data = {
+                "old_id": channel.id,
+                "ip": channel.ip,
+                "state": channel.state
+            }
+            self.disconnected_players[channel.ip] = disconnect_data
+
             del self.players[channel.id]
 
     def spawn_bullet(self, owner, bullet_type: str, x, y, vel_x, vel_y, hit_w: int, hit_h: int):
@@ -292,6 +329,9 @@ class OrbeetoServer(Server):
 
         self.broadcast()
 
+    def _get_num_unique_players(self) -> int:
+        return len(self.players) + len(self.disconnected_players)
+
     def _handle_player_teleport(self, player_id, player):
         player_hitbox = pygame.Rect(
             player["x"] - player["hit_w"] // 2,
@@ -341,6 +381,9 @@ class OrbeetoServer(Server):
             )
 
             if not bullet_hitbox.colliderect(player_hitbox):
+                continue
+
+            if player["hp"] <= 0:
                 continue
 
             # Intentional: let players take damage from own bullets

@@ -97,9 +97,6 @@ class Player(cb.ActorBase):
         self.room = cb.get_room()
 
         self.net = NetClient(self, "localhost", 12345)
-
-        # self.last_textbox_release = ctrl.key_released[ctrl.K_DIALOGUE]
-
         self.set_images(os.path.join(os.getcwd(), 'sprites/orbeeto/orbeeto.png'), 64, 64, 5, 5)
         self.set_rects(0, 0, 64, 64, 32, 32)
 
@@ -351,6 +348,9 @@ class Player(cb.ActorBase):
 
     def shoot(self):
         """Shoots bullets"""
+        if self.hp <= 0:
+            return
+
         offset = vec((21, 30))
         angle = math.radians(calc.get_angle_to_mouse(self))
         self.gun_cooldown = max(self.gun_l.cooldown, self.gun_r.cooldown)
@@ -489,11 +489,11 @@ class Player(cb.ActorBase):
                 groups.all_font_chars.add(
                     text.IndicatorText(self.pos.x, self.pos.y - 32, f'{math.ceil(0.02 * self.max_hp)}')
                 )
-        else:
-            self._passive_hp_regen()
+        # else:
+        #     self._passive_hp_regen()
 
-        if self.hp <= 0:
-            self.kill()
+        if self.hp <= 0:  # Don't kill player but remove health bar
+            self.health_bar.remove_from_gamestate()
 
         self.net.send_move(
             self.pos.x - self.room.pos.x,

@@ -15,7 +15,6 @@ from servermanager import servermanager
 import screen
 
 PING_INTERVAL = 2
-#changed this from 1 to 6
 PING_TIMEOUT = 6
 
 
@@ -38,7 +37,6 @@ class NetClient(ConnectionListener):
 
         self.connection_lost_header = None
 
-        # self.Connect((host, port))
         print(f"Hooked to Player on {host} with port {port}")
 
     def validate_IPAddress(self, ip):
@@ -55,10 +53,18 @@ class NetClient(ConnectionListener):
         host, port = self.server_address
         if not self.validate_IPAddress(host):
             return
+        # resetting player conditions
+        self.client_player.hp = 50
+        self.client_player.health_bar.add_to_gamestate()
+        self.client_player.gun_heat = 0
+        self.client_player.realizer.clear()
+
+        room_pos = self.client_player.room.pos
+        self.client_player.pos.x = room_pos.x + 640
+        self.client_player.pos.y = room_pos.y + 360
 
         self.udp_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.udp_socket.setblocking(False)
-
         server_req = {
             "action": "udp_request"
         }
@@ -89,6 +95,17 @@ class NetClient(ConnectionListener):
     def Network_init(self, data):
         self.my_id = data["id"]
         print(f"Connected as Player {self.my_id}")
+
+        room_pos = self.client_player.room.pos
+
+        # Preserving position in room between servers
+        old_rel_x = data["old_room_rel_pos_x"]
+        old_rel_y = data["old_room_rel_pos_y"]
+        if old_rel_x is not None:
+            self.client_player.pos.x = room_pos.x + old_rel_x
+        if old_rel_y is not None:
+            self.client_player.pos.y = room_pos.y + old_rel_y
+
         self.connected = True
 
     def Network_pong(self, data):
@@ -97,7 +114,6 @@ class NetClient(ConnectionListener):
 
     def Network_update_players(self, data):
         if self.my_id is not None:
-            #is this needed?(I only added it after adding username and everything was working fine before but I dont know where players is being updated with the new values instead.)
             self.players = data["players"]
             self.client_player.hp = self.players[self.my_id]["hp"]
 
