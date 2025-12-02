@@ -178,12 +178,7 @@ class Room(cb.AbstractBase):
         self.accel_const = self.player1.accel_const
 
         self._room_specs = {
-            (0, 0): RoomSpecs(1280, 720, True, True),
-            (0, 1): RoomSpecs(640, 360, True, True),
-            (0, 2): RoomSpecs(1280, 720, False, True),
-
-            (1, 0): RoomSpecs(1280*2, 720, True, False),
-            (2, 0): RoomSpecs(1280*2, 720, True, False),
+            (0, 0): RoomSpecs(1280 * 4, 720 * 4, True, True),
         }
 
         self.layout_update()
@@ -404,8 +399,8 @@ class Room(cb.AbstractBase):
     def accel_movement(self) -> None:
         """Calculates the room's acceleration, velocity, and position
         """
-        if self.vel.magnitude() > 25:
-            self.vel = self.vel.normalize() * 25
+        # if self.vel.magnitude() > 25:
+        #     self.vel = self.vel.normalize() * 25
         self.accel.x += self.vel.x * cst.FRIC
         self.accel.y += self.vel.y * cst.FRIC
         self.vel += self.accel * (screen.dt * cst.M_FPS)
@@ -893,11 +888,9 @@ class Room(cb.AbstractBase):
         """
         if self.room == vec(0, 0):
             return [
-                tiles.Wall(0, 0, 4, 41, 0, -1, True),
-                tiles.Wall(256, 256, 16, 16, 0, -1, True),
-                # tiles.CustomWall(cst.WINWIDTH // 2, cst.WINHEIGHT // 2,
-                #                  'xx\nxo', 64)
-                # trinkets.Box(300, 300)
+                tiles.Wall(0, 0, 4, 180, 0, -1, True),  # Left Bound
+                tiles.Wall(4, 0, 316, 4, 0, -1, True),  # Top Bound
+                tiles.Wall(4, 176, 316, 4, 0, -1, True),  # Bottom Bound
             ]
         else:
             raise RuntimeError(f'No room layout associated with room {self.room}.')

@@ -307,6 +307,16 @@ def get_scroll_weight(obj) -> vec:
         -mult * math.tan((math.pi / (2 * cst.WINWIDTH)) * obj.pos.x - math.pi / 4),
         -mult * math.tan((math.pi / (2 * cst.WINHEIGHT)) * obj.pos.y - math.pi / 4)
     )
+
+    if obj.pos.x <= 0:
+        scroll_weight.x = mult
+    elif obj.pos.x >= cst.WINWIDTH:
+        scroll_weight.x = -mult
+    if obj.pos.y <= 0:
+        scroll_weight.y = mult
+    elif obj.pos.y >= cst.WINHEIGHT:
+        scroll_weight.y = -mult
+
     return scroll_weight
 
 

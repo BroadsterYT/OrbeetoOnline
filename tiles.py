@@ -94,7 +94,7 @@ class Wall(TileBase):
         if add_to_group:
             groups.all_walls.add(self)
 
-        self.pos = self.place_top_left(pos_x, pos_y)
+        self.pos = self.place_top_left(pos_x * self.tile_size, pos_y * self.tile_size)
 
         self.spritesheet = spritesheet.Spritesheet(os.path.join(os.getcwd(), 'sprites/tiles/wall.png'), 16)
         self.textures = self.spritesheet.get_images(16, 16, 16, image_row * 16)

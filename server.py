@@ -121,8 +121,9 @@ class OrbeetoServer(Server):
         self.walls.clear()
 
         self.walls = {
-            ServerRoom.get_next_wall_id(): ServerRoom.new_wall(0, 0, 16, 16, 4, 41),
-            ServerRoom.get_next_wall_id(): ServerRoom.new_wall(256, 256, 16, 16, 16, 16)
+            ServerRoom.get_next_wall_id(): ServerRoom.new_wall(0, 0, 16, 16, 4, 180),
+            ServerRoom.get_next_wall_id(): ServerRoom.new_wall(4, 0, 16, 16, 316, 4),
+            ServerRoom.get_next_wall_id(): ServerRoom.new_wall(4, 176, 16, 16, 316, 4),
         }
 
     def remove_player(self, channel):
@@ -293,7 +294,6 @@ class OrbeetoServer(Server):
 
                 case _:
                     pass
-
         except BlockingIOError:
             pass
 
@@ -316,7 +316,7 @@ class OrbeetoServer(Server):
 
             # TODO: Find way to reference room
             # Destroy bullets OOB
-            if b["x"] >= 1280 or b["x"] <= 0 or b["y"] >= 720 or b["y"] <= 0:
+            if b["x"] >= 1280 * 4 or b["x"] <= 0 or b["y"] >= 720 * 4 or b["y"] <= 0:
                 to_destroy.append(bid)
 
         for bullet in to_destroy:
