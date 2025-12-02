@@ -3,6 +3,7 @@ import constants as cst
 import pickle
 import socket
 import time
+import ipaddress
 
 from pygame.math import Vector2 as vec
 
@@ -38,7 +39,20 @@ class NetClient(ConnectionListener):
 
         print(f"Hooked to Player on {host} with port {port}")
 
+    def validate_IPAddress(self, ip):
+        if ip == "localhost":
+            return True
+        try:
+            ipaddress.ip_address(ip)
+            return True
+        except ValueError:
+            print("Invalid IP address!")
+            return False
+
     def establish_connection(self):
+        host, port = self.server_address
+        if not self.validate_IPAddress(host):
+            return
         # resetting player conditions
         self.client_player.hp = 50
         self.client_player.health_bar.add_to_gamestate()
@@ -55,9 +69,12 @@ class NetClient(ConnectionListener):
             "action": "udp_request"
         }
         server_req_bin = pickle.dumps(server_req)
-        self.udp_socket.sendto(server_req_bin, self.server_address)
-        # print(f"host: {self.server_address[0]}, port: {self.server_address[1]}")
-
+        try:
+            self.udp_socket.sendto(server_req_bin, self.server_address)
+        except Exception as e:
+            print(e)
+            return
+        print(f"host: {self.server_address[0]}, port: {self.server_address[1]}")
         self.Connect((self.server_address[0], self.server_address[1]))
         self.send_username()
         self.last_pong = time.time()
@@ -193,8 +210,13 @@ class NetClient(ConnectionListener):
         self.walls = data["walls"]
 
     def Pre_game_pump(self):
-        connection.Pump()
-        self.Pump()
+        try:
+            connection.Pump()
+            self.Pump()
+            #print("pre pump worked")
+        except Exception as e:
+            #print("Pre pump error! error msg: " + str(e))
+            pass
 
     def Loop(self):
         if not self.connected:

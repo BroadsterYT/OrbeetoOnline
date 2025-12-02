@@ -96,4 +96,4 @@ class InputBox(cb.ActorBase):
         self.image.blit(txt_surface, (5, 5))
 
     def get_text(self):
-        return self.text
+        return str(self.text)
