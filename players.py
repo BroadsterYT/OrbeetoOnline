@@ -196,6 +196,7 @@ class Player(cb.ActorBase):
 
         :return:
         """
+        print(f"len: {len(arr)}")
         for box in arr:
             if box.name == 'IPAddressInput':
                 if box.get_text() == "":

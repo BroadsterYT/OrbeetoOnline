@@ -75,7 +75,7 @@ class OrbeetoServer(Server):
         self.portals = {}
 
         self.disconnected_players = {}  # {ip: disconnect_data}
-                                        # disconnect_data = { old_id, ip, channel.state}
+        # disconnect_data = { old_id, ip, channel.state}
 
         self.next_player_id = 0
         self.next_bullet_id = 0
@@ -83,6 +83,8 @@ class OrbeetoServer(Server):
 
         self.current_room = vec(0, 0)
         self._build_room(0, 0)
+
+        self.lobby_mode = True
 
     def Connected(self, channel, addr):
         # Check if player has connected before
@@ -119,7 +121,6 @@ class OrbeetoServer(Server):
 
     def _build_room(self, room_x, room_y):
         self.walls.clear()
-
         self.walls = {
             ServerRoom.get_next_wall_id(): ServerRoom.new_wall(0, 0, 16, 16, 4, 180),
             ServerRoom.get_next_wall_id(): ServerRoom.new_wall(4, 0, 16, 16, 316, 4),
@@ -139,6 +140,10 @@ class OrbeetoServer(Server):
             del self.players[channel.id]
 
     def spawn_bullet(self, owner, bullet_type: str, x, y, vel_x, vel_y, hit_w: int, hit_h: int):
+        if self.lobby_mode:
+            print("lobby mode")
+            return
+
         bullet_id = self.next_bullet_id
         self.next_bullet_id += 1
 
@@ -151,7 +156,6 @@ class OrbeetoServer(Server):
             "vel_y": vel_y,
             "hit_w": hit_w,
             "hit_h": hit_h,
-            "alive": True,
         }
 
     def destroy_bullet(self, bullet_id):
@@ -328,6 +332,17 @@ class OrbeetoServer(Server):
             portal["y"] = portal["landed_on"]["y"] + portal["offset_y"]
 
         self.broadcast()
+
+        # if self.lobby_mode and self._get_num_unique_players() < self._get_max_players_allowed():
+        #     self._exit_lobby_mode()
+
+    def _exit_lobby_mode(self):
+        print("exit lobby mode")
+        self.lobby_mode = False
+        for pid, ch in self.players.items():
+            ch.state["lobby_mode"] = False
+        for ip, state_data in self.disconnected_players.items():
+            state_data["state"]["lobby_mode"] = False
 
     def _get_num_unique_players(self) -> int:
         return len(self.players) + len(self.disconnected_players)
