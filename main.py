@@ -158,6 +158,7 @@ gs.s_server_settings.all_sprites.add(server_settings_header, server_settings_1_h
 
 def return_from_win():
     global main_room
+    servermanager.stop()
     gs.gamestack.pop()
 
 

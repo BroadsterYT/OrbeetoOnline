@@ -234,7 +234,6 @@ class NetClient(ConnectionListener):
         self.walls = data["walls"]
 
     def Network_game_end(self, data):
-        servermanager.stop()
         self.handle_timeout()
         gs.gamestack.push(gs.s_game_win)
 
