@@ -13,6 +13,8 @@ import socket
 import pygame
 from pygame.math import Vector2 as vec
 
+PING_TIMEOUT = 6
+
 
 class PlayerChannel(Channel):
     def __init__(self, *args, **kwargs):
@@ -37,6 +39,7 @@ class PlayerChannel(Channel):
         self.state["username"] = data["username"]
 
     def Network_ping(self, data):
+        self._server.track_ping(self.ip)
         self.Send({"action": "pong"})
 
     def Network_move(self, data):
@@ -76,6 +79,7 @@ class OrbeetoServer(Server):
         self.walls = {}
         self.portals = {}
 
+        self.player_pings = {} # {ip: last_ping}
         self.disconnected_players = {}  # {ip: disconnect_data}
                                         # disconnect_data = { old_id, ip, channel.state}
         self.server_setting_player_number = None
@@ -107,6 +111,7 @@ class OrbeetoServer(Server):
             self.next_player_id += 1
             channel.Send({"action": "init", "id": channel.id, "old_room_rel_pos_x": None, "old_room_rel_pos_y": None})
             print(f"New player with IP {channel.ip} connected.")
+            self.track_ping(channel.ip)
 
         else:  # Player has joined server before
             channel.id = self.disconnected_players[addr[0]]["old_id"]
@@ -122,6 +127,7 @@ class OrbeetoServer(Server):
                 "old_room_rel_pos_y": channel.state["y"]
             })
             print(f"Player with IP {channel.ip} has reconnected.")
+            self.track_ping(channel.ip)
 
     def _build_room(self, room_x, room_y):
         self.walls.clear()
@@ -130,6 +136,9 @@ class OrbeetoServer(Server):
             ServerRoom.get_next_wall_id(): ServerRoom.new_wall(4, 0, 16, 16, 316, 4),
             ServerRoom.get_next_wall_id(): ServerRoom.new_wall(4, 176, 16, 16, 316, 4),
         }
+
+    def track_ping(self, ip: str):
+        self.player_pings[ip] = time.time()
 
     def remove_player(self, channel):
         if channel.id in self.players:
@@ -142,6 +151,7 @@ class OrbeetoServer(Server):
             self.disconnected_players[channel.ip] = disconnect_data
 
             del self.players[channel.id]
+            del self.player_pings[channel.ip]
 
     def spawn_bullet(self, owner, bullet_type: str, x, y, vel_x, vel_y, hit_w: int, hit_h: int):
         if self.lobby_mode:
@@ -304,6 +314,19 @@ class OrbeetoServer(Server):
                     pass
         except BlockingIOError:
             pass
+
+        # Checking for disconnections
+        ips_to_remove = []
+        for ip, last_ping in self.player_pings.items():
+            if (time.time() - last_ping) > PING_TIMEOUT:
+                ips_to_remove.append(ip)
+
+        for ip in ips_to_remove:
+            # Finding and removing player
+            for ch in self.players.values():
+                if ch.ip == ip:
+                    self.remove_player(ch)
+                    break
 
         # TCP Sending/Receiving
         for pid, ch in self.players.items():
