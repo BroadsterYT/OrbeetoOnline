@@ -13,6 +13,8 @@ import socket
 import pygame
 from pygame.math import Vector2 as vec
 
+PING_TIMEOUT = 6
+
 
 class PlayerChannel(Channel):
     def __init__(self, *args, **kwargs):
@@ -27,19 +29,24 @@ class PlayerChannel(Channel):
             "hp": 50,
             "hit_w": 32,
             "hit_h": 32,
+            "angle": 0,
             "username": None,
             "lobby_mode": False
         }
+    def Network_set_server_settings(self, data):
+        self._server.server_setting_player_number = data["setting"]
 
     def Network_set_username(self, data):
         self.state["username"] = data["username"]
 
     def Network_ping(self, data):
+        self._server.track_ping(self.ip)
         self.Send({"action": "pong"})
 
     def Network_move(self, data):
         self.state["x"] = data["x"]
         self.state["y"] = data["y"]
+        self.state["angle"] = data["angle"]
 
     def Network_fire(self, data):
         bullet_id = self._server.spawn_bullet(
@@ -74,8 +81,10 @@ class OrbeetoServer(Server):
         self.walls = {}
         self.portals = {}
 
+        self.player_pings = {} # {ip: last_ping}
         self.disconnected_players = {}  # {ip: disconnect_data}
                                         # disconnect_data = { old_id, ip, channel.state}
+        self.server_setting_player_number = None
 
         self.next_player_id = 0
         self.next_bullet_id = 0
@@ -83,6 +92,9 @@ class OrbeetoServer(Server):
 
         self.current_room = vec(0, 0)
         self._build_room(0, 0)
+
+        self.lobby_mode = True
+        self.game_over = False
 
     def Connected(self, channel, addr):
         # Check if player has connected before
@@ -101,6 +113,7 @@ class OrbeetoServer(Server):
             self.next_player_id += 1
             channel.Send({"action": "init", "id": channel.id, "old_room_rel_pos_x": None, "old_room_rel_pos_y": None})
             print(f"New player with IP {channel.ip} connected.")
+            self.track_ping(channel.ip)
 
         else:  # Player has joined server before
             channel.id = self.disconnected_players[addr[0]]["old_id"]
@@ -116,14 +129,18 @@ class OrbeetoServer(Server):
                 "old_room_rel_pos_y": channel.state["y"]
             })
             print(f"Player with IP {channel.ip} has reconnected.")
+            self.track_ping(channel.ip)
 
     def _build_room(self, room_x, room_y):
         self.walls.clear()
-
         self.walls = {
-            ServerRoom.get_next_wall_id(): ServerRoom.new_wall(0, 0, 16, 16, 4, 41),
-            ServerRoom.get_next_wall_id(): ServerRoom.new_wall(256, 256, 16, 16, 16, 16)
+            ServerRoom.get_next_wall_id(): ServerRoom.new_wall(0, 0, 16, 16, 4, 180),
+            ServerRoom.get_next_wall_id(): ServerRoom.new_wall(4, 0, 16, 16, 316, 4),
+            ServerRoom.get_next_wall_id(): ServerRoom.new_wall(4, 176, 16, 16, 316, 4),
         }
+
+    def track_ping(self, ip: str):
+        self.player_pings[ip] = time.time()
 
     def remove_player(self, channel):
         if channel.id in self.players:
@@ -136,8 +153,13 @@ class OrbeetoServer(Server):
             self.disconnected_players[channel.ip] = disconnect_data
 
             del self.players[channel.id]
+            del self.player_pings[channel.ip]
 
     def spawn_bullet(self, owner, bullet_type: str, x, y, vel_x, vel_y, hit_w: int, hit_h: int):
+        if self.lobby_mode:
+            print("lobby mode")
+            return
+
         bullet_id = self.next_bullet_id
         self.next_bullet_id += 1
 
@@ -150,7 +172,6 @@ class OrbeetoServer(Server):
             "vel_y": vel_y,
             "hit_w": hit_w,
             "hit_h": hit_h,
-            "alive": True,
         }
 
     def destroy_bullet(self, bullet_id):
@@ -293,9 +314,21 @@ class OrbeetoServer(Server):
 
                 case _:
                     pass
-
         except BlockingIOError:
             pass
+
+        # Checking for disconnections
+        ips_to_remove = []
+        for ip, last_ping in self.player_pings.items():
+            if (time.time() - last_ping) > PING_TIMEOUT:
+                ips_to_remove.append(ip)
+
+        for ip in ips_to_remove:
+            # Finding and removing player
+            for ch in self.players.values():
+                if ch.ip == ip:
+                    self.remove_player(ch)
+                    break
 
         # TCP Sending/Receiving
         for pid, ch in self.players.items():
@@ -316,7 +349,7 @@ class OrbeetoServer(Server):
 
             # TODO: Find way to reference room
             # Destroy bullets OOB
-            if b["x"] >= 1280 or b["x"] <= 0 or b["y"] >= 720 or b["y"] <= 0:
+            if b["x"] >= 1280 * 4 or b["x"] <= 0 or b["y"] >= 720 * 4 or b["y"] <= 0:
                 to_destroy.append(bid)
 
         for bullet in to_destroy:
@@ -329,8 +362,47 @@ class OrbeetoServer(Server):
 
         self.broadcast()
 
+        if self.server_setting_player_number is None:
+            return
+
+        if self.lobby_mode and self._get_num_unique_players() >= int(self.server_setting_player_number):
+            self._exit_lobby_mode()
+
+        # Win condition
+        if not self.lobby_mode and not self.game_over and self._get_num_alive_players() == 1:
+            self.game_over = True
+            self._declare_winner()
+
+    def _declare_winner(self):
+        winner = ""
+        for ch in self.players.values():
+            if ch.state["hp"] > 0:
+                winner = ch.state["username"]
+
+        print(f"Winner is: {winner}")
+        game_end = {
+            "action": "game_end",
+            "winner": winner
+        }
+        for client in self.players.values():
+            client.Send(game_end)
+
+    def _exit_lobby_mode(self):
+        self.lobby_mode = False
+        for pid, ch in self.players.items():
+            ch.state["lobby_mode"] = False
+        for ip, state_data in self.disconnected_players.items():
+            state_data["state"]["lobby_mode"] = False
+
     def _get_num_unique_players(self) -> int:
         return len(self.players) + len(self.disconnected_players)
+
+    def _get_num_alive_players(self) -> int:
+        count = 0
+        for pid, ch in self.players.items():
+            if ch.state["hp"] > 0:
+                count += 1
+        return count
 
     def _handle_player_teleport(self, player_id, player):
         player_hitbox = pygame.Rect(

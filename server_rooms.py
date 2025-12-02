@@ -21,8 +21,8 @@ class ServerRoom:
         :param height:
         :return:
         """
-        true_x = pos_x + (width * block_width) // 2
-        true_y = pos_y + (height * block_height) // 2
+        true_x = block_width * pos_x + (width * block_width) // 2
+        true_y = block_height * pos_y + (height * block_height) // 2
 
         wall = {
             "bullet_surface": "wall",

@@ -196,6 +196,7 @@ class Player(cb.ActorBase):
 
         :return:
         """
+        print(f"len: {len(arr)}")
         for box in arr:
             if box.name == 'IPAddressInput':
                 if box.get_text() == "":
@@ -500,6 +501,7 @@ class Player(cb.ActorBase):
         self.net.send_move(
             self.pos.x - self.room.pos.x,
             self.pos.y - self.room.pos.y,
+            calc.get_angle_to_mouse(self)
         )
         self.net.Loop()
 

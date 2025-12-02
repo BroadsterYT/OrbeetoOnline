@@ -11,6 +11,7 @@ from menus.menuinputbars import arr
 
 import gamestack as gs
 from servermanager import servermanager
+import gamestack
 
 import screen
 
@@ -77,6 +78,15 @@ class NetClient(ConnectionListener):
         print(f"host: {self.server_address[0]}, port: {self.server_address[1]}")
         self.Connect((self.server_address[0], self.server_address[1]))
         self.send_username()
+
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        try:
+            s.connect(('8.8.8.8', 80))
+            if host == "localhost" or host == s.getsockname()[0]:
+                self.send_server_settings()
+        finally:
+            s.close()
+
         self.last_pong = time.time()
 
     def send_username(self):
@@ -92,6 +102,18 @@ class NetClient(ConnectionListener):
             "action": "set_username",
             "id": self.my_id,
             "username": username
+        })
+
+    def send_server_settings(self):
+        setting = "1"
+        for box in arr:
+            if box.name == "Server-Settings-2":
+                setting = box.get_text()
+
+        connection.Send({
+            "action": "set_server_settings",
+            "id": self.my_id,
+            "setting": setting
         })
 
     def Network_init(self, data):
@@ -211,6 +233,10 @@ class NetClient(ConnectionListener):
     def Network_update_walls(self, data):
         self.walls = data["walls"]
 
+    def Network_game_end(self, data):
+        self.handle_timeout()
+        gs.gamestack.push(gs.s_game_win)
+
     def Pre_game_pump(self):
         try:
             connection.Pump()
@@ -254,6 +280,7 @@ class NetClient(ConnectionListener):
     def handle_timeout(self):
         servermanager.stop()
         self.connected = False
+
         gs.gamestack.push(gs.s_startup)
         gs.s_startup.all_sprites.add(self.connection_lost_header)
 
@@ -265,7 +292,7 @@ class NetClient(ConnectionListener):
     def request_disconnect(self):
         connection.Close()
 
-    def send_move(self, x, y):
+    def send_move(self, x, y, angle):
         if not self.connected:
             return
 
@@ -273,6 +300,7 @@ class NetClient(ConnectionListener):
             "action": "move",
             "x": x,
             "y": y,
+            "angle": angle
         })
 
     def send_fire(self, bullet_type: str, x, y, vel_x, vel_y, hit_w: int, hit_h: int):
