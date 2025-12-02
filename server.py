@@ -29,6 +29,7 @@ class PlayerChannel(Channel):
             "hp": 50,
             "hit_w": 32,
             "hit_h": 32,
+            "angle": 0,
             "username": None,
             "lobby_mode": False
         }
@@ -45,6 +46,7 @@ class PlayerChannel(Channel):
     def Network_move(self, data):
         self.state["x"] = data["x"]
         self.state["y"] = data["y"]
+        self.state["angle"] = data["angle"]
 
     def Network_fire(self, data):
         bullet_id = self._server.spawn_bullet(

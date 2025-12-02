@@ -292,7 +292,7 @@ class NetClient(ConnectionListener):
     def request_disconnect(self):
         connection.Close()
 
-    def send_move(self, x, y):
+    def send_move(self, x, y, angle):
         if not self.connected:
             return
 
@@ -300,6 +300,7 @@ class NetClient(ConnectionListener):
             "action": "move",
             "x": x,
             "y": y,
+            "angle": angle
         })
 
     def send_fire(self, bullet_type: str, x, y, vel_x, vel_y, hit_w: int, hit_h: int):
